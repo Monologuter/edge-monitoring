@@ -111,9 +111,29 @@ public class AiBoxHttpController {
         }
     }
 
-    @PostMapping(value = "/device/image", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
-    public AiBoxUploadResponse imageBase64(@RequestBody(required = false) Object body) {
+    @PostMapping(value = "/device/image", consumes = {MediaType.APPLICATION_JSON_VALUE})
+    public AiBoxUploadResponse imageBase64Json(@RequestBody(required = false) JsonNode body) {
         AiBoxBase64FileRequest req = normalizeBase64Body(body);
+        String payload = safeJson(req);
+        try {
+            byte[] bytes = AiBoxBase64.decode(req.base64());
+            var stored = aiBoxHttpPushService.ingestMedia(
+                    req.deviceSerial(), req.alarmActionId(), "IMAGE", req.originalUrl(),
+                    StrUtil.blankToDefault(req.fileName(), "image.jpg"),
+                    req.contentType(),
+                    bytes
+            );
+            hardwareIngestLogService.record("HTTP", "/device/image", "ai-box-image", null, null, payload, true, null);
+            return AiBoxUploadResponse.ok(stored.publicUrl());
+        } catch (Exception e) {
+            hardwareIngestLogService.record("HTTP", "/device/image", "ai-box-image", null, null, payload, false, e.getMessage());
+            return new AiBoxUploadResponse("500", Objects.requireNonNullElse(e.getMessage(), "error"), null);
+        }
+    }
+
+    @PostMapping(value = "/device/image", consumes = {MediaType.TEXT_PLAIN_VALUE})
+    public AiBoxUploadResponse imageBase64Text(@RequestBody(required = false) String base64) {
+        AiBoxBase64FileRequest req = new AiBoxBase64FileRequest(null, null, null, null, null, base64);
         String payload = safeJson(req);
         try {
             byte[] bytes = AiBoxBase64.decode(req.base64());
@@ -161,9 +181,29 @@ public class AiBoxHttpController {
         }
     }
 
-    @PostMapping(value = "/device/video", consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_PLAIN_VALUE})
-    public AiBoxUploadResponse videoBase64(@RequestBody(required = false) Object body) {
+    @PostMapping(value = "/device/video", consumes = {MediaType.APPLICATION_JSON_VALUE})
+    public AiBoxUploadResponse videoBase64Json(@RequestBody(required = false) JsonNode body) {
         AiBoxBase64FileRequest req = normalizeBase64Body(body);
+        String payload = safeJson(req);
+        try {
+            byte[] bytes = AiBoxBase64.decode(req.base64());
+            var stored = aiBoxHttpPushService.ingestMedia(
+                    req.deviceSerial(), req.alarmActionId(), "VIDEO", req.originalUrl(),
+                    StrUtil.blankToDefault(req.fileName(), "video.mp4"),
+                    req.contentType(),
+                    bytes
+            );
+            hardwareIngestLogService.record("HTTP", "/device/video", "ai-box-video", null, null, payload, true, null);
+            return AiBoxUploadResponse.ok(stored.publicUrl());
+        } catch (Exception e) {
+            hardwareIngestLogService.record("HTTP", "/device/video", "ai-box-video", null, null, payload, false, e.getMessage());
+            return new AiBoxUploadResponse("500", Objects.requireNonNullElse(e.getMessage(), "error"), null);
+        }
+    }
+
+    @PostMapping(value = "/device/video", consumes = {MediaType.TEXT_PLAIN_VALUE})
+    public AiBoxUploadResponse videoBase64Text(@RequestBody(required = false) String base64) {
+        AiBoxBase64FileRequest req = new AiBoxBase64FileRequest(null, null, null, null, null, base64);
         String payload = safeJson(req);
         try {
             byte[] bytes = AiBoxBase64.decode(req.base64());
@@ -199,23 +239,22 @@ public class AiBoxHttpController {
         return s == null ? "" : s.replace("\"", "");
     }
 
-    private AiBoxBase64FileRequest normalizeBase64Body(Object body) {
-        if (body == null) return new AiBoxBase64FileRequest(null, null, null, null, null, null);
-        if (body instanceof String s) {
-            return new AiBoxBase64FileRequest(null, null, null, null, null, s);
+    private AiBoxBase64FileRequest normalizeBase64Body(JsonNode body) {
+        if (body == null || body.isNull()) return new AiBoxBase64FileRequest(null, null, null, null, null, null);
+        if (body.isTextual()) {
+            return new AiBoxBase64FileRequest(null, null, null, null, null, body.asText());
         }
         try {
-            JsonNode n = objectMapper.valueToTree(body);
-            String base64 = text(n, "base64", "data", "file", "content");
-            String fileName = text(n, "fileName", "filename", "name");
-            String ct = text(n, "contentType", "content_type", "mime");
-            String deviceSerial = text(n, "deviceSerial", "device_serial");
-            String originalUrl = text(n, "originalUrl", "url", "fileUrl", "file_url");
-            Long alarmActionId = longFirst(n, "alarmActionId", "alarmId", "alarm_action_id");
+            String base64 = text(body, "base64", "data", "file", "content");
+            String fileName = text(body, "fileName", "filename", "name");
+            String ct = text(body, "contentType", "content_type", "mime");
+            String deviceSerial = text(body, "deviceSerial", "device_serial");
+            String originalUrl = text(body, "originalUrl", "url", "fileUrl", "file_url");
+            Long alarmActionId = longFirst(body, "alarmActionId", "alarmId", "alarm_action_id");
             return new AiBoxBase64FileRequest(deviceSerial, alarmActionId, originalUrl, fileName, ct, base64);
         } catch (Exception ignore) {
         }
-        return new AiBoxBase64FileRequest(null, null, null, null, null, String.valueOf(body));
+        return new AiBoxBase64FileRequest(null, null, null, null, null, body.toString());
     }
 
     private static String text(JsonNode n, String... keys) {
@@ -245,4 +284,3 @@ public class AiBoxHttpController {
         return null;
     }
 }
-
