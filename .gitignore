@@ -33,3 +33,9 @@ yarn-error.log*
 *.swp
 *.swo
 *~
+
+# Hardware interface files
+硬件接口/
+
+# Java build output
+server/target/
