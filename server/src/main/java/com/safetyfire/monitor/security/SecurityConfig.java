@@ -23,6 +23,8 @@ public class SecurityConfig {
         http.cors(Customizer.withDefaults());
         http.sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         http.authorizeHttpRequests(auth -> auth
+                // 兼容厂商“服务器连通性探测”（GET / 或 GET /api/school/box）
+                .requestMatchers("/", "/box", "/api/school/box").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/ingest/**").permitAll()
                 // AI 盒子（边缘计算单元）HTTP 推送：不走登录态 JWT
