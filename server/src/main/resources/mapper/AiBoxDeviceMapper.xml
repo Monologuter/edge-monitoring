@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.AiBoxDeviceMapper">
+
+    <resultMap id="AiBoxDeviceMap" type="com.safetyfire.monitor.domain.entity.AiBoxDeviceEntity">
+        <id column="id" property="id"/>
+        <result column="device_serial" property="deviceSerial"/>
+        <result column="login_token" property="loginToken"/>
+        <result column="last_login_time_ms" property="lastLoginTimeMs"/>
+        <result column="last_heartbeat_time_ms" property="lastHeartbeatTimeMs"/>
+        <result column="last_ip" property="lastIp"/>
+    </resultMap>
+
+    <select id="findByDeviceSerial" resultMap="AiBoxDeviceMap">
+        SELECT id, device_serial, login_token, last_login_time_ms, last_heartbeat_time_ms, last_ip
+        FROM ai_box_device
+        WHERE device_serial = #{deviceSerial}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_box_device (device_serial, login_token, last_login_time_ms, last_heartbeat_time_ms, last_ip, created_at, updated_at)
+        VALUES (#{deviceSerial}, #{loginToken}, #{lastLoginTimeMs}, #{lastHeartbeatTimeMs}, #{lastIp}, NOW(3), NOW(3))
+    </insert>
+
+    <update id="updateLogin">
+        UPDATE ai_box_device
+        SET login_token = #{loginToken},
+            last_login_time_ms = #{loginTimeMs},
+            last_ip = #{lastIp},
+            updated_at = NOW(3)
+        WHERE device_serial = #{deviceSerial}
+    </update>
+
+    <update id="updateHeartbeat">
+        UPDATE ai_box_device
+        SET last_heartbeat_time_ms = #{heartbeatTimeMs},
+            last_ip = #{lastIp},
+            updated_at = NOW(3)
+        WHERE device_serial = #{deviceSerial}
+    </update>
+
+</mapper>
+

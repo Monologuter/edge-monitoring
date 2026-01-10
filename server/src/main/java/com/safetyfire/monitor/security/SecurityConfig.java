@@ -25,6 +25,10 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/ingest/**").permitAll()
+                // AI 盒子（边缘计算单元）HTTP 推送：不走登录态 JWT
+                .requestMatchers("/device/**").permitAll()
+                .requestMatchers("/box/device/**").permitAll()
+                .requestMatchers("/api/school/box/device/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/prometheus").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .anyRequest().authenticated()

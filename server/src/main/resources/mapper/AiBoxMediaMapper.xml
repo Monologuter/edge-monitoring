@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.AiBoxMediaMapper">
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO ai_box_media (device_serial, alarm_action_id, media_type, original_url, file_object_id, public_url, sha256, created_at, updated_at)
+        VALUES (#{deviceSerial}, #{alarmActionId}, #{mediaType}, #{originalUrl}, #{fileObjectId}, #{publicUrl}, #{sha256}, NOW(3), NOW(3))
+    </insert>
+
+</mapper>
+
