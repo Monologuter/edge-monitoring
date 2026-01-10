@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.CameraMapper">
+
+    <resultMap id="CameraMap" type="com.safetyfire.monitor.domain.entity.CameraEntity">
+        <id column="id" property="id"/>
+        <result column="company_code" property="companyCode"/>
+        <result column="camera_code" property="cameraCode"/>
+        <result column="camera_name" property="cameraName"/>
+        <result column="stream_url" property="streamUrl"/>
+        <result column="location_name" property="locationName"/>
+        <result column="store_num" property="storeNum"/>
+        <result column="storeroom_num" property="storeroomNum"/>
+        <result column="enabled" property="enabled"/>
+    </resultMap>
+
+    <select id="findById" resultMap="CameraMap">
+        SELECT id, company_code, camera_code, camera_name, stream_url, location_name, store_num, storeroom_num, enabled
+        FROM camera
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <select id="findByCameraCode" resultMap="CameraMap">
+        SELECT id, company_code, camera_code, camera_name, stream_url, location_name, store_num, storeroom_num, enabled
+        FROM camera
+        WHERE camera_code = #{cameraCode}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO camera (company_code, camera_code, camera_name, stream_url, location_name, store_num, storeroom_num, enabled, created_at, updated_at)
+        VALUES (#{companyCode}, #{cameraCode}, #{cameraName}, #{streamUrl}, #{locationName}, #{storeNum}, #{storeroomNum}, #{enabled}, NOW(3), NOW(3))
+    </insert>
+
+    <update id="update">
+        UPDATE camera
+        SET company_code = #{companyCode},
+            camera_code = #{cameraCode},
+            camera_name = #{cameraName},
+            stream_url = #{streamUrl},
+            location_name = #{locationName},
+            store_num = #{storeNum},
+            storeroom_num = #{storeroomNum},
+            enabled = #{enabled},
+            updated_at = NOW(3)
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM camera WHERE id = #{id}
+    </delete>
+
+    <select id="list" resultMap="CameraMap">
+        SELECT id, company_code, camera_code, camera_name, stream_url, location_name, store_num, storeroom_num, enabled
+        FROM camera
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (camera_code LIKE CONCAT('%', #{keyword}, '%')
+                    OR camera_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR company_code LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="companyCodes != null and companyCodes.size() > 0">
+                <if test="keyword != null and keyword != ''">AND</if>
+                company_code IN
+                <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(1)
+        FROM camera
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (camera_code LIKE CONCAT('%', #{keyword}, '%')
+                    OR camera_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR company_code LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="companyCodes != null and companyCodes.size() > 0">
+                <if test="keyword != null and keyword != ''">AND</if>
+                company_code IN
+                <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+</mapper>

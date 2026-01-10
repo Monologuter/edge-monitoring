@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.AdminRoleMapper">
+
+    <resultMap id="RoleRowMap" type="com.safetyfire.monitor.mapper.AdminRoleMapper$RoleRow">
+        <id column="id" property="id"/>
+        <result column="role_key" property="roleKey"/>
+        <result column="role_name" property="roleName"/>
+    </resultMap>
+
+    <select id="list" resultMap="RoleRowMap">
+        SELECT id, role_key, role_name
+        FROM role
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (role_key LIKE CONCAT('%', #{keyword}, '%')
+                    OR role_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(1)
+        FROM role
+        <where>
+            <if test="keyword != null and keyword != ''">
+                (role_key LIKE CONCAT('%', #{keyword}, '%')
+                    OR role_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <select id="findById" resultMap="RoleRowMap">
+        SELECT id, role_key, role_name
+        FROM role
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <select id="findByRoleKey" resultMap="RoleRowMap">
+        SELECT id, role_key, role_name
+        FROM role
+        WHERE role_key = #{roleKey}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO role (role_key, role_name, created_at, updated_at)
+        VALUES (#{roleKey}, #{roleName}, NOW(3), NOW(3))
+    </insert>
+
+    <update id="update">
+        UPDATE role
+        SET role_key = #{roleKey},
+            role_name = #{roleName},
+            updated_at = NOW(3)
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM role WHERE id = #{id}
+    </delete>
+
+    <select id="listPermissionKeys" resultType="string">
+        SELECT p.perm_key
+        FROM role_permission rp
+                 INNER JOIN permission p ON p.id = rp.perm_id
+        WHERE rp.role_id = #{roleId}
+        ORDER BY p.perm_key ASC
+    </select>
+
+    <select id="listMenuKeys" resultType="string">
+        SELECT m.menu_key
+        FROM role_menu rm
+                 INNER JOIN menu m ON m.id = rm.menu_id
+        WHERE rm.role_id = #{roleId}
+        ORDER BY m.sort_no ASC, m.id ASC
+    </select>
+
+    <delete id="deleteRolePermissions">
+        DELETE FROM role_permission WHERE role_id = #{roleId}
+    </delete>
+
+    <insert id="insertRolePermissions">
+        INSERT INTO role_permission (role_id, perm_id, created_at, updated_at)
+        SELECT #{roleId}, p.id, NOW(3), NOW(3)
+        FROM permission p
+        WHERE p.perm_key IN
+        <foreach collection="permKeys" item="k" open="(" separator="," close=")">
+            #{k}
+        </foreach>
+        ON DUPLICATE KEY UPDATE updated_at = NOW(3)
+    </insert>
+
+    <delete id="deleteRoleMenus">
+        DELETE FROM role_menu WHERE role_id = #{roleId}
+    </delete>
+
+    <insert id="insertRoleMenus">
+        INSERT INTO role_menu (role_id, menu_id, created_at, updated_at)
+        SELECT #{roleId}, m.id, NOW(3), NOW(3)
+        FROM menu m
+        WHERE m.menu_key IN
+        <foreach collection="menuKeys" item="k" open="(" separator="," close=")">
+            #{k}
+        </foreach>
+        ON DUPLICATE KEY UPDATE updated_at = NOW(3)
+    </insert>
+
+</mapper>
+

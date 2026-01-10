@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.DeviceReadingHourMapper">
+
+    <!--
+      每次上报一条样本：落入 device_reading_hour（按小时聚合）
+      avg_value 使用增量更新：(avg*samples + value) / (samples+1)
+    -->
+    <insert id="upsertSample">
+        INSERT INTO device_reading_hour (device_code, hour_start, avg_value, min_value, max_value, samples, created_at, updated_at)
+        VALUES (#{deviceCode}, #{hourStart}, #{value}, #{value}, #{value}, 1, NOW(3), NOW(3))
+        ON DUPLICATE KEY UPDATE
+            avg_value = (avg_value * samples + VALUES(avg_value)) / (samples + 1),
+            min_value = LEAST(min_value, VALUES(min_value)),
+            max_value = GREATEST(max_value, VALUES(max_value)),
+            samples = samples + 1,
+            updated_at = NOW(3)
+    </insert>
+
+</mapper>
+

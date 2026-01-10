@@ -1,0 +1,164 @@
+:root {
+  --sf-bg-0: #0a1220;
+  --sf-bg-1: #0b1e2d;
+  --sf-card: rgba(255, 255, 255, 0.06);
+  --sf-card-border: rgba(255, 255, 255, 0.12);
+  --sf-text-0: rgba(255, 255, 255, 0.92);
+  --sf-text-1: rgba(255, 255, 255, 0.72);
+  --sf-text-2: rgba(255, 255, 255, 0.5);
+  --sf-primary: #3dd6c6;
+  --sf-primary-2: #2aa6ff;
+  --sf-danger: #ff4d4f;
+  --sf-warning: #f7b500;
+  --sf-success: #33d17a;
+  --sf-radius: 14px;
+  --sf-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+  background: radial-gradient(1200px 700px at 20% 10%, rgba(61, 214, 198, 0.18), transparent 55%),
+    radial-gradient(900px 600px at 85% 15%, rgba(42, 166, 255, 0.15), transparent 55%),
+    radial-gradient(900px 600px at 50% 90%, rgba(255, 77, 79, 0.08), transparent 60%),
+    linear-gradient(180deg, var(--sf-bg-0), var(--sf-bg-1));
+  color: var(--sf-text-0);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+    "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji",
+    "Segoe UI Emoji";
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.sf-card {
+  background: var(--sf-card);
+  border: 1px solid var(--sf-card-border);
+  border-radius: var(--sf-radius);
+  box-shadow: var(--sf-shadow);
+  backdrop-filter: blur(14px);
+}
+
+.sf-muted {
+  color: var(--sf-text-1);
+}
+
+.sf-kpi {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.sf-kpi-item {
+  padding: 16px 16px;
+}
+
+.sf-kpi-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--sf-text-1);
+}
+
+.sf-kpi-value {
+  margin-top: 10px;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+}
+
+.sf-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: var(--sf-text-1);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.sf-page {
+  padding: 18px 18px;
+}
+
+.sf-title {
+  font-size: 18px;
+  font-weight: 650;
+  margin: 0;
+}
+
+/* Element Plus 深色融合（只做必要覆盖，保持“系统主题”一致） */
+.el-card,
+.el-table,
+.el-dialog,
+.el-drawer,
+.el-input__wrapper,
+.el-select__wrapper {
+  background: rgba(10, 18, 32, 0.55) !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  color: var(--sf-text-0) !important;
+}
+
+.el-table th.el-table__cell {
+  background: rgba(10, 18, 32, 0.6) !important;
+}
+
+.el-button--primary {
+  --el-button-bg-color: var(--sf-primary);
+  --el-button-border-color: rgba(255, 255, 255, 0.18);
+  --el-button-hover-bg-color: rgba(61, 214, 198, 0.9);
+}
+
+/* Element Plus 下拉菜单、选择器等弹出层样式修复 */
+.el-dropdown-menu,
+.el-select-dropdown,
+.el-cascader-panel,
+.el-menu--popup {
+  background: rgba(15, 25, 40, 0.95) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  backdrop-filter: blur(12px);
+}
+
+/* 下拉菜单项样式 */
+.el-dropdown-menu__item,
+.el-select-dropdown__item,
+.el-menu-item,
+.el-cascader-node {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.el-dropdown-menu__item:hover,
+.el-select-dropdown__item:hover,
+.el-menu-item:hover,
+.el-cascader-node:hover {
+  background: rgba(61, 214, 198, 0.15) !important;
+  color: rgba(255, 255, 255, 0.95) !important;
+}
+
+.el-dropdown-menu__item.is-active,
+.el-select-dropdown__item.is-selected,
+.el-menu-item.is-active {
+  background: rgba(61, 214, 198, 0.2) !important;
+  color: #3dd6c6 !important;
+}
+
+/* 级联菜单样式 */
+.el-cascader-menu {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.el-cascader-node:not(.is-disabled):focus,
+.el-cascader-node:not(.is-disabled):hover {
+  background: rgba(61, 214, 198, 0.12) !important;
+}
+
+/* 分隔线颜色 */
+.el-dropdown-menu__item--divided {
+  border-top-color: rgba(255, 255, 255, 0.12) !important;
+}
+

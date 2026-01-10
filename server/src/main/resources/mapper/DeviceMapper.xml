@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.DeviceMapper">
+
+    <resultMap id="DeviceEntityMap" type="com.safetyfire.monitor.domain.entity.DeviceEntity">
+        <id column="id" property="id"/>
+        <result column="company_code" property="companyCode"/>
+        <result column="device_code" property="deviceCode"/>
+        <result column="device_name" property="deviceName"/>
+        <result column="device_type" property="deviceType"/>
+        <result column="unit" property="unit"/>
+        <result column="lower_limit" property="lowerLimit"/>
+        <result column="upper_limit" property="upperLimit"/>
+        <result column="location_name" property="locationName"/>
+        <result column="store_num" property="storeNum"/>
+        <result column="storeroom_num" property="storeroomNum"/>
+        <result column="online_status" property="onlineStatus"/>
+        <result column="last_heartbeat_time" property="lastHeartbeatTime"/>
+    </resultMap>
+
+    <select id="findByDeviceCode" resultMap="DeviceEntityMap">
+        SELECT id,
+               company_code,
+               device_code,
+               device_name,
+               device_type,
+               unit,
+               lower_limit,
+               upper_limit,
+               location_name,
+               store_num,
+               storeroom_num,
+               online_status,
+               last_heartbeat_time
+        FROM device
+        WHERE device_code = #{deviceCode}
+        LIMIT 1
+    </select>
+
+    <select id="findById" resultMap="DeviceEntityMap">
+        SELECT id,
+               company_code,
+               device_code,
+               device_name,
+               device_type,
+               unit,
+               lower_limit,
+               upper_limit,
+               location_name,
+               store_num,
+               storeroom_num,
+               online_status,
+               last_heartbeat_time
+        FROM device
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO device (company_code, device_code, device_name, device_type, unit, lower_limit, upper_limit, location_name, store_num, storeroom_num,
+                            online_status, last_heartbeat_time, created_at, updated_at)
+        VALUES (#{companyCode}, #{deviceCode}, #{deviceName}, #{deviceType}, #{unit}, #{lowerLimit}, #{upperLimit}, #{locationName}, #{storeNum}, #{storeroomNum},
+                #{onlineStatus}, #{lastHeartbeatTime}, NOW(3), NOW(3))
+    </insert>
+
+    <update id="update">
+        UPDATE device
+        SET company_code = #{companyCode},
+            device_code = #{deviceCode},
+            device_name = #{deviceName},
+            device_type = #{deviceType},
+            unit = #{unit},
+            lower_limit = #{lowerLimit},
+            upper_limit = #{upperLimit},
+            location_name = #{locationName},
+            store_num = #{storeNum},
+            storeroom_num = #{storeroomNum},
+            online_status = #{onlineStatus},
+            updated_at = NOW(3)
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM device WHERE id = #{id}
+    </delete>
+
+    <select id="list" resultMap="DeviceEntityMap">
+        SELECT id,
+               company_code,
+               device_code,
+               device_name,
+               device_type,
+               unit,
+               lower_limit,
+               upper_limit,
+               location_name,
+               store_num,
+               storeroom_num,
+               online_status,
+               last_heartbeat_time
+        FROM device
+        <where>
+            <if test="companyCodes != null and companyCodes.size() > 0">
+                company_code IN
+                <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(1)
+        FROM device
+        <where>
+            <if test="companyCodes != null and companyCodes.size() > 0">
+                company_code IN
+                <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="countOnline" resultType="long">
+        SELECT COUNT(1)
+        FROM device
+        <where>
+            online_status = 1
+            <if test="companyCodes != null and companyCodes.size() > 0">
+                AND company_code IN
+                <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <update id="updateHeartbeat">
+        UPDATE device
+        SET online_status = 1,
+            last_heartbeat_time = #{heartbeatTime},
+            updated_at = NOW(3)
+        WHERE device_code = #{deviceCode}
+    </update>
+
+    <update id="markOfflineBefore">
+        UPDATE device
+        SET online_status = 0,
+            updated_at = NOW(3)
+        WHERE (last_heartbeat_time IS NULL OR last_heartbeat_time &lt; #{thresholdTime})
+          AND online_status = 1
+    </update>
+
+</mapper>

@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.AlarmMapper">
+
+    <resultMap id="AlarmEntityMap" type="com.safetyfire.monitor.domain.entity.AlarmEntity">
+        <id column="id" property="id"/>
+        <result column="company_code" property="companyCode"/>
+        <result column="alarm_type" property="alarmType"/>
+        <result column="alarm_status" property="alarmStatus"/>
+        <result column="workflow_status" property="workflowStatus"/>
+        <result column="risk_level" property="riskLevel"/>
+        <result column="device_code" property="deviceCode"/>
+        <result column="warning_time" property="warningTime"/>
+        <result column="clear_time" property="clearTime"/>
+        <result column="archived_time" property="archivedTime"/>
+        <result column="handler" property="handler"/>
+        <result column="remark" property="remark"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO alarm_event (company_code, alarm_type, alarm_status, workflow_status, risk_level, device_code, warning_time, clear_time, archived_time, handler, remark, created_at, updated_at)
+        VALUES (#{companyCode}, #{alarmType}, #{alarmStatus}, #{workflowStatus}, #{riskLevel}, #{deviceCode}, #{warningTime}, #{clearTime}, #{archivedTime}, #{handler}, #{remark}, NOW(3), NOW(3))
+    </insert>
+
+    <select id="findById" resultMap="AlarmEntityMap">
+        SELECT id, company_code, alarm_type, alarm_status, workflow_status, risk_level, device_code, warning_time, clear_time, archived_time, handler, remark
+        FROM alarm_event
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <update id="updateHandle">
+        UPDATE alarm_event
+        SET workflow_status = 'PROCESSING',
+            handler   = #{handler},
+            remark    = #{remark},
+            updated_at = NOW(3)
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateClear">
+        UPDATE alarm_event
+        SET alarm_status = 'CLEARED',
+            workflow_status = 'CLEARED',
+            clear_time = #{clearTime},
+            handler   = #{handler},
+            remark    = #{remark},
+            updated_at = NOW(3)
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateArchive">
+        UPDATE alarm_event
+        SET alarm_status = 'ARCHIVED',
+            workflow_status = 'ARCHIVED',
+            archived_time = #{archivedTime},
+            handler   = #{handler},
+            remark    = #{remark},
+            updated_at = NOW(3)
+        WHERE id = #{id}
+    </update>
+
+    <select id="countActive" resultType="long">
+        SELECT COUNT(1)
+        FROM alarm_event
+        <where>
+            alarm_status = 'ACTIVE'
+            <if test="companyCodes != null and companyCodes.size() > 0">
+                AND company_code IN
+                <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <select id="countToday" resultType="long">
+        SELECT COUNT(1)
+        FROM alarm_event
+        <where>
+            warning_time BETWEEN #{startOfDay} AND #{endOfDay}
+            <if test="companyCodes != null and companyCodes.size() > 0">
+                AND company_code IN
+                <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+    <!-- 统计最近 24 小时每小时告警数量，返回 24 个数字（按小时顺序）。 -->
+    <select id="countTrend24h" resultType="long">
+        WITH RECURSIVE hours AS (
+            SELECT 0 AS h
+            UNION ALL
+            SELECT h + 1 FROM hours WHERE h &lt; 23
+        )
+        SELECT COALESCE(t.cnt, 0) AS cnt
+        FROM hours
+                 LEFT JOIN (
+            SELECT FLOOR((warning_time - #{start}) / 3600000) AS h, COUNT(1) AS cnt
+            FROM alarm_event
+            WHERE warning_time >= #{start}
+              AND warning_time <![CDATA[<=]]> #{end}
+              <if test="companyCodes != null and companyCodes.size() > 0">
+                  AND company_code IN
+                  <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                      #{c}
+                  </foreach>
+              </if>
+            GROUP BY FLOOR((warning_time - #{start}) / 3600000)
+        ) t ON t.h = hours.h
+        ORDER BY hours.h ASC
+    </select>
+
+    <select id="list" resultMap="AlarmEntityMap">
+        SELECT id, company_code, alarm_type, alarm_status, workflow_status, risk_level, device_code, warning_time, clear_time, archived_time, handler, remark
+        FROM alarm_event
+        <where>
+            <if test="status != null and status != ''">
+                alarm_status = #{status}
+            </if>
+            <if test="companyCodes != null and companyCodes.size() > 0">
+                <if test="status != null and status != ''">AND</if>
+                company_code IN
+                <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(1)
+        FROM alarm_event
+        <where>
+            <if test="status != null and status != ''">
+                alarm_status = #{status}
+            </if>
+            <if test="companyCodes != null and companyCodes.size() > 0">
+                <if test="status != null and status != ''">AND</if>
+                company_code IN
+                <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+</mapper>

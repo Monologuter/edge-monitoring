@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.PersonOvercrowdMapper">
+
+    <resultMap id="PersonOvercrowdMap" type="com.safetyfire.monitor.domain.entity.PersonOvercrowdEntity">
+        <id column="id" property="id"/>
+        <result column="company_code" property="companyCode"/>
+        <result column="area_code" property="areaCode"/>
+        <result column="area_name" property="areaName"/>
+        <result column="current_count" property="currentCount"/>
+        <result column="max_count" property="maxCount"/>
+        <result column="warning_time" property="warningTime"/>
+    </resultMap>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO person_overcrowd (company_code, area_code, area_name, current_count, max_count, warning_time, created_at, updated_at)
+        VALUES (#{companyCode}, #{areaCode}, #{areaName}, #{currentCount}, #{maxCount}, #{warningTime}, NOW(3), NOW(3))
+    </insert>
+
+</mapper>

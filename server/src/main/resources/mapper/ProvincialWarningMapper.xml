@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.ProvincialWarningMapper">
+
+    <resultMap id="ProvincialWarningMap" type="com.safetyfire.monitor.domain.entity.ProvincialWarningEntity">
+        <id column="id" property="id"/>
+        <result column="external_id" property="externalId"/>
+        <result column="company_code" property="companyCode"/>
+        <result column="risk_level" property="riskLevel"/>
+        <result column="push_type" property="pushType"/>
+        <result column="warning_time" property="warningTime"/>
+        <result column="raw_json" property="rawJson"/>
+    </resultMap>
+
+    <insert id="upsert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO provincial_warning (external_id, company_code, risk_level, push_type, warning_time, raw_json, created_at, updated_at)
+        VALUES (#{externalId}, #{companyCode}, #{riskLevel}, #{pushType}, #{warningTime}, CAST(#{rawJson} AS JSON), NOW(3), NOW(3))
+        ON DUPLICATE KEY UPDATE
+            company_code = VALUES(company_code),
+            risk_level = VALUES(risk_level),
+            push_type = VALUES(push_type),
+            warning_time = VALUES(warning_time),
+            raw_json = VALUES(raw_json),
+            updated_at = NOW(3)
+    </insert>
+
+    <select id="list" resultMap="ProvincialWarningMap">
+        SELECT id, external_id, company_code, risk_level, push_type, warning_time, JSON_PRETTY(raw_json) AS raw_json
+        FROM provincial_warning
+        ORDER BY id DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(1) FROM provincial_warning
+    </select>
+
+</mapper>
+

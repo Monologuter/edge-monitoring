@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.FileObjectMapper">
+
+    <resultMap id="FileObjectMap" type="com.safetyfire.monitor.domain.entity.FileObjectEntity">
+        <id column="id" property="id"/>
+        <result column="biz_type" property="bizType"/>
+        <result column="original_name" property="originalName"/>
+        <result column="content_type" property="contentType"/>
+        <result column="size_bytes" property="sizeBytes"/>
+        <result column="sha256" property="sha256"/>
+        <result column="storage_type" property="storageType"/>
+        <result column="storage_path" property="storagePath"/>
+        <result column="created_by" property="createdBy"/>
+    </resultMap>
+
+    <select id="findBySha256" resultMap="FileObjectMap">
+        SELECT id, biz_type, original_name, content_type, size_bytes, sha256, storage_type, storage_path, created_by
+        FROM file_object
+        WHERE sha256 = #{sha256}
+        LIMIT 1
+    </select>
+
+    <select id="findById" resultMap="FileObjectMap">
+        SELECT id, biz_type, original_name, content_type, size_bytes, sha256, storage_type, storage_path, created_by
+        FROM file_object
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO file_object (biz_type, original_name, content_type, size_bytes, sha256, storage_type, storage_path, created_by, created_at, updated_at)
+        VALUES (#{bizType}, #{originalName}, #{contentType}, #{sizeBytes}, #{sha256}, #{storageType}, #{storagePath}, #{createdBy}, NOW(3), NOW(3))
+    </insert>
+
+</mapper>
+

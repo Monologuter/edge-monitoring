@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.UserCompanyScopeMapper">
+
+    <select id="listCompanyCodesByUserId" resultType="string">
+        SELECT company_code
+        FROM user_company_scope
+        WHERE user_id = #{userId}
+        ORDER BY company_code ASC
+    </select>
+
+    <insert id="insert">
+        INSERT INTO user_company_scope (user_id, company_code, created_at, updated_at)
+        VALUES (#{userId}, #{companyCode}, NOW(3), NOW(3))
+        ON DUPLICATE KEY UPDATE updated_at = NOW(3)
+    </insert>
+
+    <delete id="deleteByUserId">
+        DELETE FROM user_company_scope WHERE user_id = #{userId}
+    </delete>
+
+</mapper>
+

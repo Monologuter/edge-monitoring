@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.HardwareIngestLogMapper">
+
+    <resultMap id="BaseMap" type="com.safetyfire.monitor.domain.entity.HardwareIngestLogEntity">
+        <id column="id" property="id"/>
+        <result column="ingest_channel" property="ingestChannel"/>
+        <result column="topic" property="topic"/>
+        <result column="message_type" property="messageType"/>
+        <result column="api_key" property="apiKey"/>
+        <result column="company_code" property="companyCode"/>
+        <result column="payload" property="payload"/>
+        <result column="parsed_ok" property="parsedOk"/>
+        <result column="error_message" property="errorMessage"/>
+        <result column="receive_time_ms" property="receiveTimeMs"/>
+    </resultMap>
+
+    <insert id="insert" parameterType="com.safetyfire.monitor.domain.entity.HardwareIngestLogEntity">
+        INSERT INTO hardware_ingest_log
+        (ingest_channel, topic, message_type, api_key, company_code, payload, parsed_ok, error_message, receive_time_ms, created_at, updated_at)
+        VALUES
+        (#{ingestChannel}, #{topic}, #{messageType}, #{apiKey}, #{companyCode}, #{payload}, #{parsedOk}, #{errorMessage}, #{receiveTimeMs}, NOW(3), NOW(3))
+    </insert>
+
+    <sql id="FilterWhere">
+        <where>
+            <if test="channel != null and channel != ''">
+                AND ingest_channel = #{channel}
+            </if>
+            <if test="messageType != null and messageType != ''">
+                AND message_type = #{messageType}
+            </if>
+            <if test="apiKey != null and apiKey != ''">
+                AND api_key = #{apiKey}
+            </if>
+            <if test="companyCode != null and companyCode != ''">
+                AND company_code = #{companyCode}
+            </if>
+            <if test="ok != null">
+                AND parsed_ok = #{ok}
+            </if>
+            <if test="topicLike != null and topicLike != ''">
+                AND topic LIKE CONCAT('%', #{topicLike}, '%')
+            </if>
+
+            <!-- 数据权限：非 ADMIN 仅允许访问授权企业的数据；company_code 为空的记录默认不可见 -->
+            <if test="scope != null">
+                AND company_code IS NOT NULL
+                AND company_code IN
+                <foreach collection="scope" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+    </sql>
+
+    <select id="list" resultMap="BaseMap">
+        SELECT id,
+               ingest_channel,
+               topic,
+               message_type,
+               api_key,
+               company_code,
+               payload,
+               parsed_ok,
+               error_message,
+               receive_time_ms
+        FROM hardware_ingest_log
+        <include refid="FilterWhere"/>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(1)
+        FROM hardware_ingest_log
+        <include refid="FilterWhere"/>
+    </select>
+
+</mapper>
+

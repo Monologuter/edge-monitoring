@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.safetyfire.monitor.mapper.StoreroomMapper">
+
+    <resultMap id="StoreroomMap" type="com.safetyfire.monitor.domain.entity.StoreroomEntity">
+        <id column="id" property="id"/>
+        <result column="store_num" property="storeNum"/>
+        <result column="storeroom_num" property="storeroomNum"/>
+        <result column="storeroom_name" property="storeroomName"/>
+        <result column="area" property="area"/>
+        <result column="danger_level" property="dangerLevel"/>
+        <result column="quota_dosage" property="quotaDosage"/>
+        <result column="quota_people" property="quotaPeople"/>
+    </resultMap>
+
+    <select id="findById" resultMap="StoreroomMap">
+        SELECT id, store_num, storeroom_num, storeroom_name, area, danger_level, quota_dosage, quota_people
+        FROM storeroom
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <select id="findByStoreroomNum" resultMap="StoreroomMap">
+        SELECT id, store_num, storeroom_num, storeroom_name, area, danger_level, quota_dosage, quota_people
+        FROM storeroom
+        WHERE storeroom_num = #{storeroomNum}
+        LIMIT 1
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO storeroom (store_num, storeroom_num, storeroom_name, area, danger_level, quota_dosage, quota_people, created_at, updated_at)
+        VALUES (#{storeNum}, #{storeroomNum}, #{storeroomName}, #{area}, #{dangerLevel}, #{quotaDosage}, #{quotaPeople}, NOW(3), NOW(3))
+    </insert>
+
+    <update id="update">
+        UPDATE storeroom
+        SET store_num = #{storeNum},
+            storeroom_num = #{storeroomNum},
+            storeroom_name = #{storeroomName},
+            area = #{area},
+            danger_level = #{dangerLevel},
+            quota_dosage = #{quotaDosage},
+            quota_people = #{quotaPeople},
+            updated_at = NOW(3)
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM storeroom WHERE id = #{id}
+    </delete>
+
+    <select id="list" resultMap="StoreroomMap">
+        SELECT id, store_num, storeroom_num, storeroom_name, area, danger_level, quota_dosage, quota_people
+        FROM storeroom sr
+                 INNER JOIN store s ON s.store_num = sr.store_num
+        <where>
+            <if test="storeNum != null and storeNum != ''">
+                sr.store_num = #{storeNum}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                <if test="storeNum != null and storeNum != ''">AND</if>
+                (sr.storeroom_num LIKE CONCAT('%', #{keyword}, '%')
+                    OR sr.storeroom_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="companyCodes != null and companyCodes.size() > 0">
+                <if test="(storeNum != null and storeNum != '') or (keyword != null and keyword != '')">AND</if>
+                s.company_code IN
+                <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY sr.id DESC
+        LIMIT #{pageSize} OFFSET #{offset}
+    </select>
+
+    <select id="count" resultType="long">
+        SELECT COUNT(1)
+        FROM storeroom sr
+                 INNER JOIN store s ON s.store_num = sr.store_num
+        <where>
+            <if test="storeNum != null and storeNum != ''">
+                sr.store_num = #{storeNum}
+            </if>
+            <if test="keyword != null and keyword != ''">
+                <if test="storeNum != null and storeNum != ''">AND</if>
+                (sr.storeroom_num LIKE CONCAT('%', #{keyword}, '%')
+                    OR sr.storeroom_name LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="companyCodes != null and companyCodes.size() > 0">
+                <if test="(storeNum != null and storeNum != '') or (keyword != null and keyword != '')">AND</if>
+                s.company_code IN
+                <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+    </select>
+
+</mapper>

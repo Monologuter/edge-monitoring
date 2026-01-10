@@ -1,0 +1,75 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: monitor-server
+  threads:
+    virtual:
+      enabled: true
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${MYSQL_URL:jdbc:mysql://47.120.48.64:3306/safetyfire?useUnicode=true&characterEncoding=UTF-8&allowPublicKeyRetrieval=true&verifyServerCertificate=false&useSSL=false&serverTimezone=Asia/Shanghai}
+    username: ${MYSQL_USERNAME:root}
+    password: ${MYSQL_PASSWORD:12345678}
+  data:
+    redis:
+      host: ${REDIS_HOST:47.120.48.64}
+      port: ${REDIS_PORT:6379}
+  flyway:
+    enabled: true
+    # 建议：使用"干净数据库"直接跑迁移；避免对已有库自动 baseline 引发迁移冲突
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: false
+
+mybatis:
+  mapper-locations: classpath*:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+app:
+  jwt:
+    # 注意：生产务必使用更长、更随机的密钥，并通过环境变量注入
+    secret: "change_me_to_a_long_random_secret_key_32_chars_min!"
+    access-ttl-seconds: 900
+    refresh-ttl-seconds: 604800
+  file:
+    storage-type: LOCAL
+    local-dir: "./.data/uploads"
+  provincial:
+    enabled: false
+    base-url: "http://localhost:9999"
+    warning-page-path: "/fws/rec/ew/com-page"
+    feedback-path: "/fws/rec/ew/feedback"
+  mqtt:
+    enabled: true
+    broker-url: "tcp://47.120.48.64:1883"
+    username: "admin"
+    password: "admin"
+    client-id-prefix: "safetyfire-server"
+    ingest:
+      enabled: true
+      topic-prefix: "safetyfire/ingest"
+      qos: 1
+      client-id-prefix: "safetyfire-ingest"
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    com.safetyfire.monitor: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] requestId=%X{requestId} %logger{36} - %msg%n"
