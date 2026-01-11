@@ -25,6 +25,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * AI边缘盒子 HTTP 对接（兼容文档中的 /device/*）。
@@ -169,141 +171,86 @@ public class AiBoxHttpController {
     }
 
     /**
-     * 图片上传：兼容 multipart/form-data 与 base64 JSON 两种方式。
+     * 图片上传（兼容）：
+     * - multipart/form-data：字段名不确定（可能是 file/image/pic/...），因此使用 request.getParts() 兜底解析
+     * - application/json：可能为标准 JSON 或设备端大小写不规范（application/Json）
+     * - text/plain：body 直接是 base64 字符串
      */
-    @PostMapping(value = "/device/image", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public AiBoxUploadResponse imageMultipart(
-            @RequestParam(required = false) String deviceSerial,
-            @RequestParam(required = false) Long alarmActionId,
-            @RequestParam(required = false) String originalUrl,
-            @RequestPart(required = false) MultipartFile file,
-            @RequestPart(required = false, name = "image") MultipartFile image
-    ) {
-        MultipartFile f = file != null ? file : image;
-        if (f == null || f.isEmpty()) return new AiBoxUploadResponse("400", "file is empty", null);
+    @PostMapping("/device/image")
+    public AiBoxUploadResponse imageAny(HttpServletRequest request,
+                                        @RequestParam(required = false) String deviceSerial,
+                                        @RequestParam(required = false) Long alarmActionId,
+                                        @RequestParam(required = false) String originalUrl,
+                                        @RequestPart(required = false) MultipartFile file,
+                                        @RequestPart(required = false, name = "image") MultipartFile image) {
+        String uri = request.getRequestURI();
         try {
-            var stored = aiBoxHttpPushService.ingestMedia(
-                    deviceSerial, alarmActionId, "IMAGE", originalUrl,
-                    StrUtil.blankToDefault(f.getOriginalFilename(), "image.jpg"),
-                    f.getContentType(),
-                    f.getBytes()
-            );
-            hardwareIngestLogService.record("HTTP", "/device/image", "ai-box-image", null, null,
-                    "{\"deviceSerial\":\"" + safe(deviceSerial) + "\",\"alarmActionId\":" + alarmActionId + "}", true, null);
-            return AiBoxUploadResponse.ok(stored.publicUrl());
-        } catch (Exception e) {
-            hardwareIngestLogService.record("HTTP", "/device/image", "ai-box-image", null, null,
-                    "{\"deviceSerial\":\"" + safe(deviceSerial) + "\",\"alarmActionId\":" + alarmActionId + "}", false, e.getMessage());
-            return new AiBoxUploadResponse("500", Objects.requireNonNullElse(e.getMessage(), "error"), null);
-        }
-    }
+            UploadPayload payload = extractUploadPayload(request, deviceSerial, alarmActionId, originalUrl, file, image);
+            if (payload.bytes == null || payload.bytes.length == 0) {
+                hardwareIngestLogService.recordStrict("HTTP", uri, "ai-box-image", null,
+                        ingestService.tryResolveCompanyCodeByDeviceOrCamera(payload.deviceSerial),
+                        safeJson(payload.debug), false, "empty image payload");
+                return new AiBoxUploadResponse("400", "file is empty", null);
+            }
 
-    @PostMapping(value = "/device/image", consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public AiBoxUploadResponse imageBase64Json(@RequestBody(required = false) JsonNode body) {
-        AiBoxBase64FileRequest req = normalizeBase64Body(body);
-        String payload = safeJson(req);
-        try {
-            byte[] bytes = AiBoxBase64.decode(req.base64());
             var stored = aiBoxHttpPushService.ingestMedia(
-                    req.deviceSerial(), req.alarmActionId(), "IMAGE", req.originalUrl(),
-                    StrUtil.blankToDefault(req.fileName(), "image.jpg"),
-                    req.contentType(),
-                    bytes
+                    payload.deviceSerial, payload.alarmActionId, "IMAGE", payload.originalUrl,
+                    StrUtil.blankToDefault(payload.fileName, "image.jpg"),
+                    payload.contentType,
+                    payload.bytes
             );
-            hardwareIngestLogService.record("HTTP", "/device/image", "ai-box-image", null, null, payload, true, null);
-            return AiBoxUploadResponse.ok(stored.publicUrl());
-        } catch (Exception e) {
-            hardwareIngestLogService.record("HTTP", "/device/image", "ai-box-image", null, null, payload, false, e.getMessage());
-            return new AiBoxUploadResponse("500", Objects.requireNonNullElse(e.getMessage(), "error"), null);
-        }
-    }
 
-    @PostMapping(value = "/device/image", consumes = {MediaType.TEXT_PLAIN_VALUE})
-    public AiBoxUploadResponse imageBase64Text(@RequestBody(required = false) String base64) {
-        AiBoxBase64FileRequest req = new AiBoxBase64FileRequest(null, null, null, null, null, base64);
-        String payload = safeJson(req);
-        try {
-            byte[] bytes = AiBoxBase64.decode(req.base64());
-            var stored = aiBoxHttpPushService.ingestMedia(
-                    req.deviceSerial(), req.alarmActionId(), "IMAGE", req.originalUrl(),
-                    StrUtil.blankToDefault(req.fileName(), "image.jpg"),
-                    req.contentType(),
-                    bytes
-            );
-            hardwareIngestLogService.record("HTTP", "/device/image", "ai-box-image", null, null, payload, true, null);
+            hardwareIngestLogService.recordStrict("HTTP", uri, "ai-box-image", null,
+                    ingestService.tryResolveCompanyCodeByDeviceOrCamera(payload.deviceSerial),
+                    safeJson(payload.debug), true, null);
             return AiBoxUploadResponse.ok(stored.publicUrl());
         } catch (Exception e) {
-            hardwareIngestLogService.record("HTTP", "/device/image", "ai-box-image", null, null, payload, false, e.getMessage());
+            try {
+                hardwareIngestLogService.record("HTTP", uri, "ai-box-image", null, null,
+                        "{\"err\":\"" + safe(e.getMessage()) + "\"}", false, e.getMessage());
+            } catch (Exception ignore) {
+            }
             return new AiBoxUploadResponse("500", Objects.requireNonNullElse(e.getMessage(), "error"), null);
         }
     }
 
     /**
-     * 录像上传：兼容 multipart/form-data 与 base64 JSON 两种方式。
+     * 录像上传（兼容）：同图片上传。
      */
-    @PostMapping(value = "/device/video", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
-    public AiBoxUploadResponse videoMultipart(
-            @RequestParam(required = false) String deviceSerial,
-            @RequestParam(required = false) Long alarmActionId,
-            @RequestParam(required = false) String originalUrl,
-            @RequestPart(required = false) MultipartFile file,
-            @RequestPart(required = false, name = "video") MultipartFile video
-    ) {
-        MultipartFile f = file != null ? file : video;
-        if (f == null || f.isEmpty()) return new AiBoxUploadResponse("400", "file is empty", null);
+    @PostMapping("/device/video")
+    public AiBoxUploadResponse videoAny(HttpServletRequest request,
+                                        @RequestParam(required = false) String deviceSerial,
+                                        @RequestParam(required = false) Long alarmActionId,
+                                        @RequestParam(required = false) String originalUrl,
+                                        @RequestPart(required = false) MultipartFile file,
+                                        @RequestPart(required = false, name = "video") MultipartFile video) {
+        String uri = request.getRequestURI();
         try {
-            var stored = aiBoxHttpPushService.ingestMedia(
-                    deviceSerial, alarmActionId, "VIDEO", originalUrl,
-                    StrUtil.blankToDefault(f.getOriginalFilename(), "video.mp4"),
-                    f.getContentType(),
-                    f.getBytes()
-            );
-            hardwareIngestLogService.record("HTTP", "/device/video", "ai-box-video", null, null,
-                    "{\"deviceSerial\":\"" + safe(deviceSerial) + "\",\"alarmActionId\":" + alarmActionId + "}", true, null);
-            return AiBoxUploadResponse.ok(stored.publicUrl());
-        } catch (Exception e) {
-            hardwareIngestLogService.record("HTTP", "/device/video", "ai-box-video", null, null,
-                    "{\"deviceSerial\":\"" + safe(deviceSerial) + "\",\"alarmActionId\":" + alarmActionId + "}", false, e.getMessage());
-            return new AiBoxUploadResponse("500", Objects.requireNonNullElse(e.getMessage(), "error"), null);
-        }
-    }
+            UploadPayload payload = extractUploadPayload(request, deviceSerial, alarmActionId, originalUrl, file, video);
+            if (payload.bytes == null || payload.bytes.length == 0) {
+                hardwareIngestLogService.recordStrict("HTTP", uri, "ai-box-video", null,
+                        ingestService.tryResolveCompanyCodeByDeviceOrCamera(payload.deviceSerial),
+                        safeJson(payload.debug), false, "empty video payload");
+                return new AiBoxUploadResponse("400", "file is empty", null);
+            }
 
-    @PostMapping(value = "/device/video", consumes = {MediaType.APPLICATION_JSON_VALUE})
-    public AiBoxUploadResponse videoBase64Json(@RequestBody(required = false) JsonNode body) {
-        AiBoxBase64FileRequest req = normalizeBase64Body(body);
-        String payload = safeJson(req);
-        try {
-            byte[] bytes = AiBoxBase64.decode(req.base64());
             var stored = aiBoxHttpPushService.ingestMedia(
-                    req.deviceSerial(), req.alarmActionId(), "VIDEO", req.originalUrl(),
-                    StrUtil.blankToDefault(req.fileName(), "video.mp4"),
-                    req.contentType(),
-                    bytes
+                    payload.deviceSerial, payload.alarmActionId, "VIDEO", payload.originalUrl,
+                    StrUtil.blankToDefault(payload.fileName, "video.mp4"),
+                    payload.contentType,
+                    payload.bytes
             );
-            hardwareIngestLogService.record("HTTP", "/device/video", "ai-box-video", null, null, payload, true, null);
-            return AiBoxUploadResponse.ok(stored.publicUrl());
-        } catch (Exception e) {
-            hardwareIngestLogService.record("HTTP", "/device/video", "ai-box-video", null, null, payload, false, e.getMessage());
-            return new AiBoxUploadResponse("500", Objects.requireNonNullElse(e.getMessage(), "error"), null);
-        }
-    }
 
-    @PostMapping(value = "/device/video", consumes = {MediaType.TEXT_PLAIN_VALUE})
-    public AiBoxUploadResponse videoBase64Text(@RequestBody(required = false) String base64) {
-        AiBoxBase64FileRequest req = new AiBoxBase64FileRequest(null, null, null, null, null, base64);
-        String payload = safeJson(req);
-        try {
-            byte[] bytes = AiBoxBase64.decode(req.base64());
-            var stored = aiBoxHttpPushService.ingestMedia(
-                    req.deviceSerial(), req.alarmActionId(), "VIDEO", req.originalUrl(),
-                    StrUtil.blankToDefault(req.fileName(), "video.mp4"),
-                    req.contentType(),
-                    bytes
-            );
-            hardwareIngestLogService.record("HTTP", "/device/video", "ai-box-video", null, null, payload, true, null);
+            hardwareIngestLogService.recordStrict("HTTP", uri, "ai-box-video", null,
+                    ingestService.tryResolveCompanyCodeByDeviceOrCamera(payload.deviceSerial),
+                    safeJson(payload.debug), true, null);
             return AiBoxUploadResponse.ok(stored.publicUrl());
         } catch (Exception e) {
-            hardwareIngestLogService.record("HTTP", "/device/video", "ai-box-video", null, null, payload, false, e.getMessage());
+            try {
+                hardwareIngestLogService.record("HTTP", uri, "ai-box-video", null, null,
+                        "{\"err\":\"" + safe(e.getMessage()) + "\"}", false, e.getMessage());
+            } catch (Exception ignore) {
+            }
             return new AiBoxUploadResponse("500", Objects.requireNonNullElse(e.getMessage(), "error"), null);
         }
     }
@@ -397,6 +344,162 @@ public class AiBoxHttpController {
         return f.endsWith(".mp4") || f.endsWith(".avi") || f.endsWith(".mov") || f.endsWith(".flv") || f.endsWith(".mkv");
     }
 
+    private UploadPayload extractUploadPayload(HttpServletRequest request,
+                                               String deviceSerial,
+                                               Long alarmActionId,
+                                               String originalUrl,
+                                               MultipartFile primary,
+                                               MultipartFile secondary) throws Exception {
+        Map<String, Object> debug = new LinkedHashMap<>();
+        debug.put("contentType", request.getContentType());
+        debug.put("deviceSerialParam", deviceSerial);
+        debug.put("alarmActionIdParam", alarmActionId);
+        debug.put("originalUrlParam", originalUrl);
+
+        // 1) 优先使用 Spring 绑定到的 MultipartFile（file/image/video）
+        MultipartFile f = primary != null ? primary : secondary;
+        if (f != null && !f.isEmpty()) {
+            debug.put("source", "multipart-bound");
+            debug.put("fileField", f.getName());
+            debug.put("fileName", f.getOriginalFilename());
+            debug.put("fileSize", f.getSize());
+            return new UploadPayload(
+                    deviceSerial,
+                    alarmActionId,
+                    originalUrl,
+                    f.getOriginalFilename(),
+                    f.getContentType(),
+                    f.getBytes(),
+                    debug
+            );
+        }
+
+        // 2) 兜底：遍历 request.getParts()，兼容设备端字段名不固定
+        List<Map<String, Object>> partsDebug = new ArrayList<>();
+        Map<String, String> textFields = new LinkedHashMap<>();
+        try {
+            for (Part part : request.getParts()) {
+                Map<String, Object> pd = new LinkedHashMap<>();
+                pd.put("name", part.getName());
+                pd.put("filename", part.getSubmittedFileName());
+                pd.put("size", part.getSize());
+                pd.put("contentType", part.getContentType());
+                partsDebug.add(pd);
+
+                if (part.getSubmittedFileName() == null) {
+                    textFields.put(part.getName(), readPartAsString(part, 10_000));
+                    continue;
+                }
+
+                debug.put("source", "multipart-any-part");
+                debug.put("fileField", part.getName());
+                debug.put("fileName", part.getSubmittedFileName());
+                debug.put("fileSize", part.getSize());
+
+                String serial = pickDeviceSerial(textFields);
+                Long aid = alarmActionId != null ? alarmActionId : tryParseLong(textFields.get("alarmActionId"));
+                String ourl = originalUrl != null ? originalUrl : firstNonBlank(textFields, "originalUrl", "url", "fileUrl", "file_url");
+                debug.put("textFields", textFields);
+                debug.put("parts", partsDebug);
+                return new UploadPayload(
+                        firstNonBlank(deviceSerial, serial),
+                        aid,
+                        ourl,
+                        part.getSubmittedFileName(),
+                        part.getContentType(),
+                        readPartAsBytes(part, 200 * 1024 * 1024L),
+                        debug
+                );
+            }
+        } catch (Exception e) {
+            debug.put("partsReadError", e.getMessage());
+        }
+        debug.put("textFields", textFields);
+        debug.put("parts", partsDebug);
+
+        // 3) 如果没有文件 part，尝试从 multipart 字段里拿 base64
+        String b64 = pickBase64(textFields);
+        if (b64 != null && !b64.isBlank()) {
+            debug.put("source", "multipart-base64");
+            String serial = pickDeviceSerial(textFields);
+            return new UploadPayload(
+                    firstNonBlank(deviceSerial, serial),
+                    alarmActionId,
+                    originalUrl,
+                    "image.jpg",
+                    "image/jpeg",
+                    AiBoxBase64.decode(b64),
+                    debug
+            );
+        }
+
+        // 4) 非 multipart：读取 body，可能是 base64 / json / 二进制
+        byte[] bodyBytes = request.getInputStream().readAllBytes();
+        debug.put("source", "raw-body");
+        debug.put("bodySize", bodyBytes.length);
+        String asText = null;
+        try {
+            asText = new String(bodyBytes, StandardCharsets.UTF_8).trim();
+        } catch (Exception ignore) {
+        }
+        if (asText != null && !asText.isBlank()) {
+            // 4.1) 纯 base64（text/plain）
+            try {
+                byte[] decoded = AiBoxBase64.decode(asText);
+                if (decoded != null && decoded.length > 0) {
+                    debug.put("bodyKind", "base64");
+                    return new UploadPayload(deviceSerial, alarmActionId, originalUrl, "image.jpg", "image/jpeg", decoded, debug);
+                }
+            } catch (Exception ignore) {
+            }
+            // 4.2) JSON（可能 content-type 大小写不规范）
+            try {
+                JsonNode node = objectMapper.readTree(asText);
+                AiBoxBase64FileRequest req = normalizeBase64Body(node);
+                debug.put("bodyKind", "json");
+                byte[] decoded = AiBoxBase64.decode(req.base64());
+                return new UploadPayload(
+                        firstNonBlank(deviceSerial, req.deviceSerial()),
+                        alarmActionId != null ? alarmActionId : req.alarmActionId(),
+                        originalUrl != null ? originalUrl : req.originalUrl(),
+                        req.fileName(),
+                        req.contentType(),
+                        decoded,
+                        debug
+                );
+            } catch (Exception ignore) {
+            }
+        }
+
+        // 4.3) 兜底：把 body 当作二进制文件（部分设备可能直接推二进制）
+        debug.put("bodyKind", "binary");
+        return new UploadPayload(deviceSerial, alarmActionId, originalUrl, null, request.getContentType(), bodyBytes, debug);
+    }
+
+    private static String firstNonBlank(Map<String, String> map, String... keys) {
+        if (map == null) return null;
+        for (String k : keys) {
+            String v = map.get(k);
+            if (v != null && !v.isBlank()) return v.trim();
+        }
+        return null;
+    }
+
+    private static String firstNonBlank(String a, String b) {
+        if (a != null && !a.isBlank()) return a;
+        if (b != null && !b.isBlank()) return b;
+        return null;
+    }
+
+    private static Long tryParseLong(String s) {
+        if (s == null || s.isBlank()) return null;
+        try {
+            return Long.parseLong(s.trim());
+        } catch (NumberFormatException ignore) {
+            return null;
+        }
+    }
+
     private static String pickDeviceSerial(Map<String, String> fields) {
         if (fields == null || fields.isEmpty()) return null;
         String[] keys = new String[]{
@@ -455,5 +558,9 @@ public class AiBoxHttpController {
             if (s != null && s.length() > 80) return s;
         }
         return null;
+    }
+
+    private record UploadPayload(String deviceSerial, Long alarmActionId, String originalUrl,
+                                 String fileName, String contentType, byte[] bytes, Map<String, Object> debug) {
     }
 }
