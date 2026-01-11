@@ -118,26 +118,60 @@ public class AiBoxHttpController {
         }
     }
 
-    @PostMapping(value = {"", "/"}, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public AiBoxSimpleResponse vendorJson(HttpServletRequest request, @RequestBody(required = false) JsonNode body) {
+    /**
+     * 兼容厂商/摄像头平台 JSON 推送（Content-Type 可能大小写不规范）。
+     *
+     * 重要：你提供的 payload 中包含 imageFragmentFile（Base64 JPEG），这里会递归提取并落盘，
+     * 写入 ai_box_media/file_object。
+     */
+    @PostMapping(value = {"", "/"}, consumes = "*/*")
+    public AiBoxSimpleResponse vendorJson(HttpServletRequest request, @RequestBody(required = false) byte[] bodyBytes) {
         String uri = request.getRequestURI();
-        String raw = body == null ? "{}" : body.toString();
+        String raw = bodyBytes == null ? "" : new String(bodyBytes, StandardCharsets.UTF_8);
         try {
-            // 仅留痕；如果包含 base64 字段则落盘
-            String deviceSerial = pickDeviceSerial(body);
-            String b64 = pickBase64(body);
-            if (b64 != null && !b64.isBlank()) {
-                byte[] bytes = AiBoxBase64.decode(b64);
-                aiBoxHttpPushService.ingestMedia(deviceSerial, null, "IMAGE", null, "image.jpg", "image/jpeg", bytes);
+            JsonNode body = null;
+            try {
+                body = (raw == null || raw.isBlank()) ? null : objectMapper.readTree(raw);
+            } catch (Exception ignore) {
             }
+
+            String deviceSerial = pickDeviceSerial(body);
+            List<Base64Image> images = new ArrayList<>();
+            if (body != null) {
+                collectBase64Images(body, images, 8);
+            } else {
+                // 兜底：raw 如果是纯 base64，也尝试落盘
+                String maybeBase64 = raw == null ? null : raw.trim();
+                if (maybeBase64 != null && maybeBase64.length() > 200) {
+                    images.add(new Base64Image("body", maybeBase64));
+                }
+            }
+
+            int storedCount = 0;
+            for (int i = 0; i < images.size(); i++) {
+                Base64Image img = images.get(i);
+                if (img.base64 == null || img.base64.isBlank()) continue;
+                byte[] bytes = AiBoxBase64.decode(img.base64);
+                if (bytes == null || bytes.length == 0) continue;
+                String ct = guessImageContentType(img.base64, bytes);
+                String ext = ct != null && ct.contains("png") ? "png" : "jpg";
+                String filename = "vendor_" + safeKey(img.key) + "_" + i + "." + ext;
+                aiBoxHttpPushService.ingestMedia(deviceSerial, null, "IMAGE", null, filename, ct, bytes);
+                storedCount++;
+            }
+
+            Map<String, Object> debug = new LinkedHashMap<>();
+            debug.put("contentType", request.getContentType());
+            debug.put("deviceSerial", deviceSerial);
+            debug.put("imagesFound", images.size());
+            debug.put("imagesStored", storedCount);
+
             String companyCode = ingestService.tryResolveCompanyCodeByDeviceOrCamera(deviceSerial);
-            hardwareIngestLogService.recordStrict("HTTP", uri, "vendor-json", null, companyCode, raw, true, null);
+            hardwareIngestLogService.recordStrict("HTTP", uri, "vendor-json", null, companyCode, safeJson(debug), true, null);
             return AiBoxSimpleResponse.ok();
         } catch (Exception e) {
             try {
-                String deviceSerial = pickDeviceSerial(body);
-                String companyCode = ingestService.tryResolveCompanyCodeByDeviceOrCamera(deviceSerial);
-                hardwareIngestLogService.record("HTTP", uri, "vendor-json", null, companyCode, raw, false, e.getMessage());
+                hardwareIngestLogService.record("HTTP", uri, "vendor-json", null, null, raw, false, e.getMessage());
             } catch (Exception ignore) {
             }
             return AiBoxSimpleResponse.fail(e.getMessage());
@@ -525,13 +559,20 @@ public class AiBoxHttpController {
                 "deviceSerial", "device_serial",
                 "deviceId", "device_id",
                 "uuid", "serial", "sn",
+                "serialno",
                 "cameraCode", "camera_code",
                 "channel_num", "channel"
         };
+        // 先尝试顶层（性能更好）
         for (String k : keys) {
             JsonNode v = body.get(k);
             if (v == null || v.isNull()) continue;
             String s = v.asText(null);
+            if (s != null && !s.isBlank()) return s.trim();
+        }
+        // 再递归全树查找（兼容 AlarmInfoPlate.serialno 这类嵌套结构）
+        for (String k : keys) {
+            String s = findFirstText(body, k, 8);
             if (s != null && !s.isBlank()) return s.trim();
         }
         return null;
@@ -562,5 +603,94 @@ public class AiBoxHttpController {
 
     private record UploadPayload(String deviceSerial, Long alarmActionId, String originalUrl,
                                  String fileName, String contentType, byte[] bytes, Map<String, Object> debug) {
+    }
+
+    private record Base64Image(String key, String base64) {
+    }
+
+    private static void collectBase64Images(JsonNode node, List<Base64Image> out, int max) {
+        if (node == null || out.size() >= max) return;
+        if (node.isObject()) {
+            node.fields().forEachRemaining(e -> {
+                if (out.size() >= max) return;
+                String k = e.getKey();
+                JsonNode v = e.getValue();
+                if (v != null && v.isTextual() && looksLikeBase64ImageKey(k, v.asText())) {
+                    out.add(new Base64Image(k, v.asText()));
+                }
+                collectBase64Images(v, out, max);
+            });
+            return;
+        }
+        if (node.isArray()) {
+            for (JsonNode n : node) {
+                if (out.size() >= max) break;
+                collectBase64Images(n, out, max);
+            }
+        }
+    }
+
+    private static boolean looksLikeBase64ImageKey(String key, String value) {
+        if (value == null) return false;
+        String v = value.trim();
+        if (v.length() < 200) return false;
+        String k = key == null ? "" : key.toLowerCase();
+        if (k.contains("imagefragmentfile")) return true;
+        if (k.equals("base64") || k.endsWith("base64")) return true;
+        if (k.contains("image") || k.contains("picture") || k.contains("snapshot")) {
+            return v.startsWith("/9j/") || v.startsWith("iVBOR") || v.startsWith("data:image/");
+        }
+        return false;
+    }
+
+    private static String findFirstText(JsonNode node, String key, int maxDepth) {
+        if (node == null || node.isNull() || maxDepth < 0 || key == null) return null;
+        if (node.isObject()) {
+            JsonNode direct = node.get(key);
+            if (direct != null && direct.isTextual()) {
+                String s = direct.asText();
+                if (s != null && !s.isBlank()) return s;
+            }
+            var it = node.fields();
+            while (it.hasNext()) {
+                var e = it.next();
+                String s = findFirstText(e.getValue(), key, maxDepth - 1);
+                if (s != null && !s.isBlank()) return s;
+            }
+            return null;
+        }
+        if (node.isArray()) {
+            for (JsonNode n : node) {
+                String s = findFirstText(n, key, maxDepth - 1);
+                if (s != null && !s.isBlank()) return s;
+            }
+        }
+        return null;
+    }
+
+    private static String guessImageContentType(String base64, byte[] bytes) {
+        if (base64 != null) {
+            String s = base64.trim();
+            if (s.startsWith("data:image/png")) return "image/png";
+            if (s.startsWith("data:image/jpeg") || s.startsWith("data:image/jpg")) return "image/jpeg";
+            if (s.startsWith("iVBOR")) return "image/png";
+            if (s.startsWith("/9j/")) return "image/jpeg";
+        }
+        if (bytes != null && bytes.length >= 8) {
+            // PNG: 89 50 4E 47 0D 0A 1A 0A
+            if ((bytes[0] & 0xFF) == 0x89 && bytes[1] == 0x50 && bytes[2] == 0x4E && bytes[3] == 0x47) {
+                return "image/png";
+            }
+            // JPEG: FF D8
+            if ((bytes[0] & 0xFF) == 0xFF && (bytes[1] & 0xFF) == 0xD8) {
+                return "image/jpeg";
+            }
+        }
+        return "application/octet-stream";
+    }
+
+    private static String safeKey(String key) {
+        if (key == null || key.isBlank()) return "img";
+        return key.replaceAll("[^A-Za-z0-9_\\-]", "_");
     }
 }
