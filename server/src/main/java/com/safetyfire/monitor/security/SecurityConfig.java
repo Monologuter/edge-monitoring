@@ -25,6 +25,8 @@ public class SecurityConfig {
         http.authorizeHttpRequests(auth -> auth
                 // 兼容厂商“服务器连通性探测”（GET / 或 GET /api/school/box）
                 .requestMatchers("/", "/box", "/api/school/box").permitAll()
+                // 兼容部分摄像头/平台推送路径（不走登录态 JWT）
+                .requestMatchers("/devicemanagement/php/**").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/api/v1/ingest/**").permitAll()
                 // AI 盒子（边缘计算单元）HTTP 推送：不走登录态 JWT

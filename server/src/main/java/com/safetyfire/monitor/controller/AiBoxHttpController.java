@@ -18,6 +18,11 @@ import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.servlet.http.Part;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -52,6 +57,71 @@ public class AiBoxHttpController {
         } catch (Exception e) {
             hardwareIngestLogService.record("HTTP", "/device/login", "ai-box-login", null, null, body, false, e.getMessage());
             return new AiBoxLoginResponse("500", Objects.requireNonNullElse(e.getMessage(), "error"), null);
+        }
+    }
+
+    /**
+     * 兼容厂商/摄像头平台“只 POST 到服务器前缀”的推送方式（例如 POST /api/school/box）。
+     *
+     * 你提供的 logs 截图表明对方的推送请求为 multipart/form-data，字段包含 channel_num/user_name 等，
+     * 且未拼接 /device/* 子路径。此处做兼容接收：
+     * - 留痕：写入 hardware_ingest_log（topic=真实 URI）
+     * - 文件：若包含图片/视频 Part，则落盘 + 入库 file_object/ai_box_media
+     */
+    @PostMapping(value = {"", "/"}, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public AiBoxSimpleResponse vendorMultipart(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        Map<String, String> fields = new LinkedHashMap<>();
+        int fileCount = 0;
+        try {
+            for (Part part : request.getParts()) {
+                if (part.getSubmittedFileName() == null) {
+                    String v = readPartAsString(part, 10_000);
+                    fields.put(part.getName(), v);
+                    continue;
+                }
+                fileCount++;
+                String filename = StrUtil.blankToDefault(part.getSubmittedFileName(), part.getName());
+                String ct = part.getContentType();
+                String mediaType = isLikelyVideo(filename, ct) ? "VIDEO" : "IMAGE";
+                byte[] bytes = readPartAsBytes(part, 25 * 1024 * 1024L);
+                String deviceSerial = pickDeviceSerial(fields);
+                aiBoxHttpPushService.ingestMedia(deviceSerial, null, mediaType, null, filename, ct, bytes);
+            }
+
+            // 如果对方不是文件 Part，而是 base64 字符串字段，也尝试落盘（兼容“接收到的是字符串”）
+            String b64 = pickBase64(fields);
+            if (fileCount == 0 && b64 != null && !b64.isBlank()) {
+                byte[] bytes = AiBoxBase64.decode(b64);
+                String deviceSerial = pickDeviceSerial(fields);
+                aiBoxHttpPushService.ingestMedia(deviceSerial, null, "IMAGE", null, "image.jpg", "image/jpeg", bytes);
+            }
+
+            hardwareIngestLogService.record("HTTP", uri, "vendor-multipart", null, null, safeJson(fields), true, null);
+            return AiBoxSimpleResponse.ok();
+        } catch (Exception e) {
+            hardwareIngestLogService.record("HTTP", uri, "vendor-multipart", null, null, safeJson(fields), false, e.getMessage());
+            return AiBoxSimpleResponse.fail(e.getMessage());
+        }
+    }
+
+    @PostMapping(value = {"", "/"}, consumes = MediaType.APPLICATION_JSON_VALUE)
+    public AiBoxSimpleResponse vendorJson(HttpServletRequest request, @RequestBody(required = false) JsonNode body) {
+        String uri = request.getRequestURI();
+        String raw = body == null ? "{}" : body.toString();
+        try {
+            // 仅留痕；如果包含 base64 字段则落盘
+            String deviceSerial = pickDeviceSerial(body);
+            String b64 = pickBase64(body);
+            if (b64 != null && !b64.isBlank()) {
+                byte[] bytes = AiBoxBase64.decode(b64);
+                aiBoxHttpPushService.ingestMedia(deviceSerial, null, "IMAGE", null, "image.jpg", "image/jpeg", bytes);
+            }
+            hardwareIngestLogService.record("HTTP", uri, "vendor-json", null, null, raw, true, null);
+            return AiBoxSimpleResponse.ok();
+        } catch (Exception e) {
+            hardwareIngestLogService.record("HTTP", uri, "vendor-json", null, null, raw, false, e.getMessage());
+            return AiBoxSimpleResponse.fail(e.getMessage());
         }
     }
 
@@ -280,6 +350,91 @@ public class AiBoxHttpController {
                 return Long.parseLong(s.trim());
             } catch (NumberFormatException ignore) {
             }
+        }
+        return null;
+    }
+
+    private static String readPartAsString(Part part, int maxChars) throws Exception {
+        try (InputStream in = part.getInputStream()) {
+            byte[] bytes = in.readNBytes(Math.max(0, maxChars) * 4L > Integer.MAX_VALUE ? Integer.MAX_VALUE : maxChars * 4);
+            String s = new String(bytes, StandardCharsets.UTF_8);
+            if (s.length() <= maxChars) return s;
+            return s.substring(0, maxChars);
+        }
+    }
+
+    private static byte[] readPartAsBytes(Part part, long maxBytes) throws Exception {
+        long size = part.getSize();
+        if (size > maxBytes) {
+            throw new IllegalArgumentException("文件过大，size=" + size);
+        }
+        try (InputStream in = part.getInputStream()) {
+            return in.readAllBytes();
+        }
+    }
+
+    private static boolean isLikelyVideo(String filename, String contentType) {
+        String ct = contentType == null ? "" : contentType.toLowerCase();
+        if (ct.startsWith("video/")) return true;
+        String f = filename == null ? "" : filename.toLowerCase();
+        return f.endsWith(".mp4") || f.endsWith(".avi") || f.endsWith(".mov") || f.endsWith(".flv") || f.endsWith(".mkv");
+    }
+
+    private static String pickDeviceSerial(Map<String, String> fields) {
+        if (fields == null || fields.isEmpty()) return null;
+        String[] keys = new String[]{
+                "deviceSerial", "device_serial",
+                "deviceId", "device_id",
+                "device_uuid", "uuid",
+                "serial", "sn",
+                "cameraCode", "camera_code",
+                "channel_num", "channel"
+        };
+        for (String k : keys) {
+            String v = fields.get(k);
+            if (v != null && !v.isBlank()) return v.trim();
+        }
+        // 兜底：有些平台会用 user_name/用户名也作为维度，但这里不强行绑定
+        return null;
+    }
+
+    private static String pickDeviceSerial(JsonNode body) {
+        if (body == null || body.isNull()) return null;
+        String[] keys = new String[]{
+                "deviceSerial", "device_serial",
+                "deviceId", "device_id",
+                "uuid", "serial", "sn",
+                "cameraCode", "camera_code",
+                "channel_num", "channel"
+        };
+        for (String k : keys) {
+            JsonNode v = body.get(k);
+            if (v == null || v.isNull()) continue;
+            String s = v.asText(null);
+            if (s != null && !s.isBlank()) return s.trim();
+        }
+        return null;
+    }
+
+    private static String pickBase64(Map<String, String> fields) {
+        if (fields == null || fields.isEmpty()) return null;
+        String[] keys = new String[]{"base64", "imageBase64", "imgBase64", "picBase64", "picture", "image", "file", "data"};
+        for (String k : keys) {
+            String v = fields.get(k);
+            if (v != null && v.length() > 80) return v;
+        }
+        return null;
+    }
+
+    private static String pickBase64(JsonNode body) {
+        if (body == null || body.isNull()) return null;
+        String[] keys = new String[]{"base64", "imageBase64", "imgBase64", "picBase64", "picture", "image", "data"};
+        for (String k : keys) {
+            JsonNode v = body.get(k);
+            if (v == null || v.isNull()) continue;
+            if (!v.isTextual()) continue;
+            String s = v.asText();
+            if (s != null && s.length() > 80) return s;
         }
         return null;
     }
