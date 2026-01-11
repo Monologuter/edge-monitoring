@@ -11,6 +11,7 @@ import com.safetyfire.monitor.domain.vo.AiBoxSimpleResponse;
 import com.safetyfire.monitor.domain.vo.AiBoxUploadResponse;
 import com.safetyfire.monitor.service.AiBoxHttpPushService;
 import com.safetyfire.monitor.service.HardwareIngestLogService;
+import com.safetyfire.monitor.service.IngestService;
 import com.safetyfire.monitor.util.AiBoxBase64;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -38,13 +39,16 @@ public class AiBoxHttpController {
     private final AiBoxHttpPushService aiBoxHttpPushService;
     private final HardwareIngestLogService hardwareIngestLogService;
     private final ObjectMapper objectMapper;
+    private final IngestService ingestService;
 
     public AiBoxHttpController(AiBoxHttpPushService aiBoxHttpPushService,
                                HardwareIngestLogService hardwareIngestLogService,
-                               ObjectMapper objectMapper) {
+                               ObjectMapper objectMapper,
+                               IngestService ingestService) {
         this.aiBoxHttpPushService = aiBoxHttpPushService;
         this.hardwareIngestLogService = hardwareIngestLogService;
         this.objectMapper = objectMapper;
+        this.ingestService = ingestService;
     }
 
     @PostMapping("/device/login")
@@ -97,10 +101,17 @@ public class AiBoxHttpController {
                 aiBoxHttpPushService.ingestMedia(deviceSerial, null, "IMAGE", null, "image.jpg", "image/jpeg", bytes);
             }
 
-            hardwareIngestLogService.record("HTTP", uri, "vendor-multipart", null, null, safeJson(fields), true, null);
+            String deviceSerial = pickDeviceSerial(fields);
+            String companyCode = ingestService.tryResolveCompanyCodeByDeviceOrCamera(deviceSerial);
+            hardwareIngestLogService.recordStrict("HTTP", uri, "vendor-multipart", null, companyCode, safeJson(fields), true, null);
             return AiBoxSimpleResponse.ok();
         } catch (Exception e) {
-            hardwareIngestLogService.record("HTTP", uri, "vendor-multipart", null, null, safeJson(fields), false, e.getMessage());
+            try {
+                String deviceSerial = pickDeviceSerial(fields);
+                String companyCode = ingestService.tryResolveCompanyCodeByDeviceOrCamera(deviceSerial);
+                hardwareIngestLogService.record("HTTP", uri, "vendor-multipart", null, companyCode, safeJson(fields), false, e.getMessage());
+            } catch (Exception ignore) {
+            }
             return AiBoxSimpleResponse.fail(e.getMessage());
         }
     }
@@ -117,10 +128,16 @@ public class AiBoxHttpController {
                 byte[] bytes = AiBoxBase64.decode(b64);
                 aiBoxHttpPushService.ingestMedia(deviceSerial, null, "IMAGE", null, "image.jpg", "image/jpeg", bytes);
             }
-            hardwareIngestLogService.record("HTTP", uri, "vendor-json", null, null, raw, true, null);
+            String companyCode = ingestService.tryResolveCompanyCodeByDeviceOrCamera(deviceSerial);
+            hardwareIngestLogService.recordStrict("HTTP", uri, "vendor-json", null, companyCode, raw, true, null);
             return AiBoxSimpleResponse.ok();
         } catch (Exception e) {
-            hardwareIngestLogService.record("HTTP", uri, "vendor-json", null, null, raw, false, e.getMessage());
+            try {
+                String deviceSerial = pickDeviceSerial(body);
+                String companyCode = ingestService.tryResolveCompanyCodeByDeviceOrCamera(deviceSerial);
+                hardwareIngestLogService.record("HTTP", uri, "vendor-json", null, companyCode, raw, false, e.getMessage());
+            } catch (Exception ignore) {
+            }
             return AiBoxSimpleResponse.fail(e.getMessage());
         }
     }
@@ -387,6 +404,7 @@ public class AiBoxHttpController {
                 "deviceId", "device_id",
                 "device_uuid", "uuid",
                 "serial", "sn",
+                "serialno",
                 "cameraCode", "camera_code",
                 "channel_num", "channel"
         };

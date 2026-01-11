@@ -28,21 +28,19 @@ public class HardwareIngestLogService {
     public void record(String channel, String topic, String messageType, String apiKey, String companyCode,
                        String payload, boolean ok, String errorMessage) {
         try {
-            HardwareIngestLogEntity e = new HardwareIngestLogEntity();
-            e.setIngestChannel(trimTo(channel, 16));
-            e.setTopic(trimTo(topic, 255));
-            e.setMessageType(trimTo(messageType, 64));
-            e.setApiKey(trimTo(apiKey, 64));
-            e.setCompanyCode(trimTo(companyCode, 64));
-            e.setPayload(trimTo(payload, 20000)); // 避免异常大 payload 撑爆数据库
-            e.setParsedOk(ok ? 1 : 0);
-            e.setErrorMessage(trimTo(errorMessage, 512));
-            e.setReceiveTimeMs(System.currentTimeMillis());
-            mapper.insert(e);
+            mapper.insert(buildEntity(channel, topic, messageType, apiKey, companyCode, payload, ok, errorMessage));
         } catch (Exception ex) {
             // 日志写入失败不影响主链路（避免硬件数据丢失）
             log.warn("硬件上报日志写入失败 err={}", ex.getMessage());
         }
+    }
+
+    /**
+     * 严格模式：写入失败则抛出异常（用于对接排查阶段，避免“返回 200 但实际上没入库”的误导）。
+     */
+    public void recordStrict(String channel, String topic, String messageType, String apiKey, String companyCode,
+                             String payload, boolean ok, String errorMessage) {
+        mapper.insert(buildEntity(channel, topic, messageType, apiKey, companyCode, payload, ok, errorMessage));
     }
 
     public PageResponse<HardwareIngestLogEntity> list(String channel, String messageType, String apiKey, String companyCode,
@@ -60,5 +58,19 @@ public class HardwareIngestLogService {
         if (v.length() <= maxLen) return v;
         return v.substring(0, maxLen);
     }
-}
 
+    private static HardwareIngestLogEntity buildEntity(String channel, String topic, String messageType, String apiKey, String companyCode,
+                                                       String payload, boolean ok, String errorMessage) {
+        HardwareIngestLogEntity e = new HardwareIngestLogEntity();
+        e.setIngestChannel(trimTo(channel, 16));
+        e.setTopic(trimTo(topic, 255));
+        e.setMessageType(trimTo(messageType, 64));
+        e.setApiKey(trimTo(apiKey, 64));
+        e.setCompanyCode(trimTo(companyCode, 64));
+        e.setPayload(trimTo(payload, 20000)); // 避免异常大 payload 撑爆数据库
+        e.setParsedOk(ok ? 1 : 0);
+        e.setErrorMessage(trimTo(errorMessage, 512));
+        e.setReceiveTimeMs(System.currentTimeMillis());
+        return e;
+    }
+}
