@@ -95,12 +95,53 @@ public class AiBoxHttpController {
                 aiBoxHttpPushService.ingestMedia(deviceSerial, null, mediaType, null, filename, ct, bytes);
             }
 
-            // 如果对方不是文件 Part，而是 base64 字符串字段，也尝试落盘（兼容“接收到的是字符串”）
-            String b64 = pickBase64(fields);
-            if (fileCount == 0 && b64 != null && !b64.isBlank()) {
-                byte[] bytes = AiBoxBase64.decode(b64);
+            int imagesStored = 0;
+
+            // 场景 A：multipart 中没有文件 Part，而是直接给 base64 字符串字段
+            if (fileCount == 0) {
+                String b64 = pickBase64(fields);
+                if (b64 != null && !b64.isBlank()) {
+                    byte[] bytes = AiBoxBase64.decode(b64);
+                    String deviceSerial = pickDeviceSerial(fields);
+                    aiBoxHttpPushService.ingestMedia(deviceSerial, null, "IMAGE", null, "image.jpg", "image/jpeg", bytes);
+                    imagesStored++;
+                }
+            }
+
+            // 场景 B：multipart 中某个字段是 JSON 字符串，图片 base64 在 imageFragmentFile 等字段里
+            if (fileCount == 0) {
                 String deviceSerial = pickDeviceSerial(fields);
-                aiBoxHttpPushService.ingestMedia(deviceSerial, null, "IMAGE", null, "image.jpg", "image/jpeg", bytes);
+                int imagesFound = 0;
+                for (Map.Entry<String, String> entry : fields.entrySet()) {
+                    String v = entry.getValue();
+                    if (v == null) continue;
+                    String s = v.trim();
+                    if (s.length() < 2) continue;
+                    if (!(s.startsWith("{") || s.startsWith("["))) continue;
+                    JsonNode body;
+                    try {
+                        body = objectMapper.readTree(s);
+                    } catch (Exception ignore) {
+                        continue;
+                    }
+                    List<Base64Image> images = new ArrayList<>();
+                    collectBase64Images(body, images, 8);
+                    imagesFound += images.size();
+                    for (int i = 0; i < images.size(); i++) {
+                        Base64Image img = images.get(i);
+                        if (img.base64 == null || img.base64.isBlank()) continue;
+                        byte[] bytes = AiBoxBase64.decode(img.base64);
+                        if (bytes == null || bytes.length == 0) continue;
+                        String ct = guessImageContentType(img.base64, bytes);
+                        String ext = ct != null && ct.contains("png") ? "png" : "jpg";
+                        String filename = "vendor_" + safeKey(img.key) + "_" + i + "." + ext;
+                        aiBoxHttpPushService.ingestMedia(deviceSerial, null, "IMAGE", null, filename, ct, bytes);
+                        imagesStored++;
+                    }
+                }
+
+                fields.put("_imagesFound", String.valueOf(imagesFound));
+                fields.put("_imagesStored", String.valueOf(imagesStored));
             }
 
             String deviceSerial = pickDeviceSerial(fields);
