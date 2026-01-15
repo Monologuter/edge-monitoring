@@ -15,6 +15,9 @@ public class DeviceEntity {
     private String locationName;
     private String storeNum;
     private String storeroomNum;
+    private String ipAddress;
+    private String accessUsername;
+    private String accessPassword;
     private Integer onlineStatus;
     private Long lastHeartbeatTime;
 
@@ -104,6 +107,30 @@ public class DeviceEntity {
 
     public void setStoreroomNum(String storeroomNum) {
         this.storeroomNum = storeroomNum;
+    }
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+
+    public String getAccessUsername() {
+        return accessUsername;
+    }
+
+    public void setAccessUsername(String accessUsername) {
+        this.accessUsername = accessUsername;
+    }
+
+    public String getAccessPassword() {
+        return accessPassword;
+    }
+
+    public void setAccessPassword(String accessPassword) {
+        this.accessPassword = accessPassword;
     }
 
     public Integer getOnlineStatus() {

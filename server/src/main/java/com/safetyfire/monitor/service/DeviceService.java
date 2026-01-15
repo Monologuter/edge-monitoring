@@ -51,6 +51,9 @@ public class DeviceService {
         e.setLocationName(req.locationName());
         e.setStoreNum(req.storeNum());
         e.setStoreroomNum(req.storeroomNum());
+        e.setIpAddress(req.ipAddress());
+        e.setAccessUsername(req.accessUsername());
+        e.setAccessPassword(req.accessPassword());
         e.setOnlineStatus(0);
         e.setLastHeartbeatTime(null);
         deviceMapper.insert(e);
@@ -83,6 +86,9 @@ public class DeviceService {
         e.setLocationName(req.locationName());
         e.setStoreNum(req.storeNum());
         e.setStoreroomNum(req.storeroomNum());
+        e.setIpAddress(req.ipAddress());
+        e.setAccessUsername(req.accessUsername());
+        e.setAccessPassword(req.accessPassword());
         e.setOnlineStatus(req.onlineStatus());
         deviceMapper.update(e);
     }
@@ -100,11 +106,11 @@ public class DeviceService {
         if (n <= 0) throw new BizException(ErrorCode.NOT_FOUND, "设备不存在");
     }
 
-    public PageResponse<DeviceVO> list(int page, int pageSize) {
+    public PageResponse<DeviceVO> list(int page, int pageSize, Integer deviceType) {
         int offset = (page - 1) * pageSize;
         List<String> scope = dataScopeService.currentCompanyCodesOrAll();
-        List<DeviceEntity> list = deviceMapper.list(scope, offset, pageSize);
-        long total = deviceMapper.countAll(scope);
+        List<DeviceEntity> list = deviceMapper.list(scope, offset, pageSize, deviceType);
+        long total = deviceMapper.countAll(scope, deviceType);
         return new PageResponse<>(list.stream().map(this::toVo).toList(), page, pageSize, total);
     }
 
@@ -121,6 +127,9 @@ public class DeviceService {
                 e.getLocationName(),
                 e.getStoreNum(),
                 e.getStoreroomNum(),
+                e.getIpAddress(),
+                e.getAccessUsername(),
+                e.getAccessPassword(),
                 e.getOnlineStatus()
         );
     }

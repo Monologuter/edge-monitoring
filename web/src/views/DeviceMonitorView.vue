@@ -1,8 +1,11 @@
 <template>
-  <div>
-    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px">
-      <h2 class="sf-title">实时设备监控</h2>
-      <div style="display: flex; gap: 10px; align-items: center">
+  <div class="sf-page">
+    <div class="sf-page-head">
+      <div>
+        <h2 class="sf-page-title">实时设备监控</h2>
+        <div class="sf-page-sub">设备状态与实时趋势</div>
+      </div>
+      <div class="sf-page-actions">
         <el-select v-model="selectedDeviceCode" placeholder="选择设备" clearable filterable style="width: 240px" @change="onDeviceChange">
           <el-option v-for="d in devices" :key="d.deviceCode" :label="`${d.deviceName} (${d.deviceCode})`" :value="d.deviceCode" />
         </el-select>
@@ -12,7 +15,7 @@
 
     <!-- 设备卡片网格 -->
     <div v-if="!selectedDeviceCode" class="device-grid">
-      <div v-for="d in devices" :key="d.deviceCode" class="device-card" :class="{ offline: d.onlineStatus !== 1 }">
+      <div v-for="d in devices" :key="d.deviceCode" class="device-card sf-card" :class="{ offline: d.onlineStatus !== 1 }">
         <div class="device-card-header">
           <span class="device-name">{{ d.deviceName }}</span>
           <span class="device-status" :class="{ online: d.onlineStatus === 1 }">
@@ -40,7 +43,7 @@
     <!-- 选中设备详情 -->
     <div v-else class="device-detail">
       <el-button @click="selectedDeviceCode = ''" style="margin-bottom: 16px">返回列表</el-button>
-      <div class="detail-card">
+      <div class="detail-card sf-card">
         <div class="detail-header">
           <h3>{{ selectedDevice?.deviceName }}</h3>
           <span class="status-badge" :class="{ online: selectedDevice?.onlineStatus === 1 }">
@@ -143,18 +146,34 @@ async function loadTrendData() {
     }
 
     const option = {
-      title: { text: "24小时趋势", left: "center" },
+      title: { text: "24小时趋势", left: "center", textStyle: { color: "rgba(60, 73, 99, 0.75)", fontWeight: 600 } },
       tooltip: { trigger: "axis" },
+      grid: { left: 42, right: 20, top: 48, bottom: 32 },
       xAxis: {
         type: "category",
-        data: data.list.map((d: { hourStart: number }) => new Date(d.hourStart).getHours() + ":00")
+        data: data.list.map((d: { hourStart: number }) => new Date(d.hourStart).getHours() + ":00"),
+        axisLabel: { color: "rgba(60, 73, 99, 0.6)" },
+        axisLine: { lineStyle: { color: "rgba(70, 88, 124, 0.12)" } }
       },
-      yAxis: { type: "value" },
+      yAxis: {
+        type: "value",
+        axisLabel: { color: "rgba(60, 73, 99, 0.6)" },
+        splitLine: { lineStyle: { color: "rgba(70, 88, 124, 0.08)" } }
+      },
       series: [{
         data: data.list.map((d: { sampleValue: number }) => d.sampleValue),
         type: "line",
         smooth: true,
-        areaStyle: { opacity: 0.3 }
+        lineStyle: { width: 3, color: "rgba(47,107,255,0.95)" },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: "rgba(47,107,255,0.22)" },
+            { offset: 1, color: "rgba(47,107,255,0.02)" }
+          ])
+        },
+        symbol: "circle",
+        symbolSize: 6,
+        itemStyle: { color: "rgba(47,107,255,0.9)" }
       }]
     };
 
@@ -201,15 +220,15 @@ onUnmounted(() => {
 }
 
 .device-card {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  border: 1px solid var(--sf-card-border);
+  border-radius: 16px;
   padding: 16px;
   transition: all 0.3s;
 }
 
 .device-card:hover {
-  border-color: rgba(64, 158, 255, 0.5);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: rgba(47, 107, 255, 0.35);
+  box-shadow: var(--sf-shadow-soft);
 }
 
 .device-card.offline {
@@ -230,14 +249,15 @@ onUnmounted(() => {
 
 .device-status {
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: 999px;
   font-size: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(47, 107, 255, 0.1);
+  color: var(--sf-text-1);
 }
 
 .device-status.online {
-  background: rgba(51, 209, 122, 0.2);
-  color: #33d17a;
+  background: rgba(34, 181, 115, 0.18);
+  color: #22b573;
 }
 
 .device-card-body {
@@ -246,7 +266,7 @@ onUnmounted(() => {
 
 .device-code {
   font-size: 13px;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--sf-text-2);
   margin-bottom: 4px;
 }
 
@@ -257,11 +277,11 @@ onUnmounted(() => {
 
 .device-type {
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--sf-text-2);
 }
 
 .device-card-footer {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--sf-outline);
   padding-top: 12px;
 }
 
@@ -272,12 +292,12 @@ onUnmounted(() => {
 }
 
 .reading-value .value {
-  color: #409eff;
+  color: #2f6bff;
 }
 
 .reading-value .unit {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--sf-text-2);
   margin-left: 4px;
 }
 
@@ -285,12 +305,12 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.5);
+  color: var(--sf-text-2);
 }
 
 .detail-card {
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 8px;
+  border: 1px solid var(--sf-card-border);
+  border-radius: 16px;
   padding: 24px;
 }
 
@@ -307,14 +327,15 @@ onUnmounted(() => {
 
 .status-badge {
   padding: 4px 12px;
-  border-radius: 4px;
+  border-radius: 999px;
   font-size: 12px;
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(47, 107, 255, 0.1);
+  color: var(--sf-text-1);
 }
 
 .status-badge.online {
-  background: rgba(51, 209, 122, 0.2);
-  color: #33d17a;
+  background: rgba(34, 181, 115, 0.18);
+  color: #22b573;
 }
 
 .detail-info {
@@ -329,7 +350,7 @@ onUnmounted(() => {
 }
 
 .info-item .label {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--sf-text-2);
   margin-right: 8px;
   min-width: 80px;
 }

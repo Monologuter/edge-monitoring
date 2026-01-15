@@ -6,6 +6,7 @@ import com.safetyfire.monitor.config.Audit;
 import com.safetyfire.monitor.domain.dto.StoreroomCreateRequest;
 import com.safetyfire.monitor.domain.dto.StoreroomUpdateRequest;
 import com.safetyfire.monitor.domain.vo.StoreroomVO;
+import com.safetyfire.monitor.domain.vo.ImportResultVO;
 import com.safetyfire.monitor.service.StoreroomService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -13,6 +14,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 库房接口（FR-04）。
@@ -45,6 +47,13 @@ public class StoreroomController {
         return ApiResponse.ok(storeroomService.create(req));
     }
 
+    @PostMapping("/import")
+    @PreAuthorize("hasAuthority('store:manage')")
+    @Audit(action = "storeroom.import")
+    public ApiResponse<ImportResultVO> importCsv(@RequestPart("file") MultipartFile file) {
+        return ApiResponse.ok(storeroomService.importCsv(file));
+    }
+
     @PutMapping
     @PreAuthorize("hasAuthority('store:manage')")
     @Audit(action = "storeroom.update")
@@ -61,4 +70,3 @@ public class StoreroomController {
         return ApiResponse.ok(null);
     }
 }
-

@@ -11,6 +11,8 @@ public class LinkageEventEntity {
     private String payload;
     private String status;
     private String lastError;
+    private Long createdAt;
+    private Long updatedAt;
 
     public Long getId() {
         return id;
@@ -67,5 +69,20 @@ public class LinkageEventEntity {
     public void setLastError(String lastError) {
         this.lastError = lastError;
     }
-}
 
+    public Long getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Long createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Long getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(Long updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+}

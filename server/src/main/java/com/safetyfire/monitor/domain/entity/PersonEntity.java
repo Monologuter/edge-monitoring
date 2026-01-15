@@ -11,6 +11,11 @@ public class PersonEntity {
     private String personType;
     private Integer isCertified;
     private String phone;
+    private Long avatarFileId;
+    private Long certFileId;
+    private java.time.LocalDate certExpireDate;
+    private Integer smsNotify;
+    private java.time.LocalDateTime updatedAt;
 
     public Long getId() {
         return id;
@@ -67,5 +72,44 @@ public class PersonEntity {
     public void setPhone(String phone) {
         this.phone = phone;
     }
-}
 
+    public Long getAvatarFileId() {
+        return avatarFileId;
+    }
+
+    public void setAvatarFileId(Long avatarFileId) {
+        this.avatarFileId = avatarFileId;
+    }
+
+    public Long getCertFileId() {
+        return certFileId;
+    }
+
+    public void setCertFileId(Long certFileId) {
+        this.certFileId = certFileId;
+    }
+
+    public java.time.LocalDate getCertExpireDate() {
+        return certExpireDate;
+    }
+
+    public void setCertExpireDate(java.time.LocalDate certExpireDate) {
+        this.certExpireDate = certExpireDate;
+    }
+
+    public Integer getSmsNotify() {
+        return smsNotify;
+    }
+
+    public void setSmsNotify(Integer smsNotify) {
+        this.smsNotify = smsNotify;
+    }
+
+    public java.time.LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(java.time.LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+}

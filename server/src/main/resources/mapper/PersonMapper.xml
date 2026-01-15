@@ -10,25 +10,34 @@
         <result column="person_type" property="personType"/>
         <result column="is_certified" property="isCertified"/>
         <result column="phone" property="phone"/>
+        <result column="avatar_file_id" property="avatarFileId"/>
+        <result column="cert_file_id" property="certFileId"/>
+        <result column="cert_expire_date" property="certExpireDate"/>
+        <result column="sms_notify" property="smsNotify"/>
+        <result column="updated_at" property="updatedAt"/>
     </resultMap>
 
     <select id="findById" resultMap="PersonMap">
-        SELECT id, company_code, person_name, idcard, person_type, is_certified, phone
+        SELECT id, company_code, person_name, idcard, person_type, is_certified, phone, avatar_file_id, cert_file_id,
+               cert_expire_date, sms_notify, updated_at
         FROM person
         WHERE id = #{id}
         LIMIT 1
     </select>
 
     <select id="findByIdcard" resultMap="PersonMap">
-        SELECT id, company_code, person_name, idcard, person_type, is_certified, phone
+        SELECT id, company_code, person_name, idcard, person_type, is_certified, phone, avatar_file_id, cert_file_id,
+               cert_expire_date, sms_notify, updated_at
         FROM person
         WHERE idcard = #{idcard}
         LIMIT 1
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO person (company_code, person_name, idcard, person_type, is_certified, phone, created_at, updated_at)
-        VALUES (#{companyCode}, #{personName}, #{idcard}, #{personType}, #{isCertified}, #{phone}, NOW(3), NOW(3))
+        INSERT INTO person (company_code, person_name, idcard, person_type, is_certified, phone, avatar_file_id, cert_file_id,
+                            cert_expire_date, sms_notify, created_at, updated_at)
+        VALUES (#{companyCode}, #{personName}, #{idcard}, #{personType}, #{isCertified}, #{phone}, #{avatarFileId}, #{certFileId},
+                #{certExpireDate}, #{smsNotify}, NOW(3), NOW(3))
     </insert>
 
     <update id="update">
@@ -38,6 +47,10 @@
             person_type = #{personType},
             is_certified = #{isCertified},
             phone = #{phone},
+            avatar_file_id = #{avatarFileId},
+            cert_file_id = #{certFileId},
+            cert_expire_date = #{certExpireDate},
+            sms_notify = #{smsNotify},
             updated_at = NOW(3)
         WHERE id = #{id}
     </update>
@@ -47,7 +60,8 @@
     </delete>
 
     <select id="list" resultMap="PersonMap">
-        SELECT id, company_code, person_name, idcard, person_type, is_certified, phone
+        SELECT id, company_code, person_name, idcard, person_type, is_certified, phone, avatar_file_id, cert_file_id,
+               cert_expire_date, sms_notify, updated_at
         FROM person
         <where>
             <if test="keyword != null and keyword != ''">

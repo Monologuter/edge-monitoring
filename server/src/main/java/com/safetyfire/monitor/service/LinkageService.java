@@ -10,16 +10,16 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * 联动服务（FR-11）：音柱/TTS 真实协议为 MQTT（MQTTX）。
+ * 联动服务（FR-11）：音柱/TTS 使用 HTTP 协议。
  */
 @Service
 public class LinkageService {
     private final LinkageEventMapper mapper;
-    private final MqttPublisher mqttPublisher;
+    private final IpSpeakerService ipSpeakerService;
 
-    public LinkageService(LinkageEventMapper mapper, MqttPublisher mqttPublisher) {
+    public LinkageService(LinkageEventMapper mapper, IpSpeakerService ipSpeakerService) {
         this.mapper = mapper;
-        this.mqttPublisher = mqttPublisher;
+        this.ipSpeakerService = ipSpeakerService;
     }
 
     @Transactional
@@ -44,21 +44,11 @@ public class LinkageService {
 
     /**
      * 执行一条联动：
-     * - MQTT_TTS：target=topic 或 topic|qos（如 tts/topic|1），payload 为 TTS 文本
-     *
-     * 兼容：历史上曾把音柱称作 “IP_TTS”，但真实协议是 MQTTX，因此 IP_TTS 等同 MQTT_TTS。
+     * - IP_TTS/HTTP_TTS：payload 为 TTS 文本，target 可选（覆盖默认音柱地址）
      */
     public void execute(LinkageEventEntity e) throws Exception {
-        if ("MQTT_TTS".equalsIgnoreCase(e.getLinkageType()) || "IP_TTS".equalsIgnoreCase(e.getLinkageType())) {
-            String target = e.getTarget() == null ? "" : e.getTarget().trim();
-            String topic = target;
-            int qos = 1;
-            int idx = target.lastIndexOf('|');
-            if (idx > 0) {
-                topic = target.substring(0, idx).trim();
-                qos = Integer.parseInt(target.substring(idx + 1).trim());
-            }
-            mqttPublisher.publish(topic, e.getPayload(), qos);
+        if ("IP_TTS".equalsIgnoreCase(e.getLinkageType()) || "HTTP_TTS".equalsIgnoreCase(e.getLinkageType())) {
+            ipSpeakerService.sendTts(e.getPayload(), e.getTarget());
             return;
         }
         // 其他类型暂留空：生产可扩展为 HTTP Webhook、短信、邮件等

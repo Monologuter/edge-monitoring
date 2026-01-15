@@ -6,6 +6,7 @@ package com.safetyfire.monitor.domain.vo;
 public record PersonInoutRecordVO(
         Long id,
         String companyCode,
+        String idcard,
         String idcardMasked,
         String personName,
         String personType,

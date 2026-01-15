@@ -50,16 +50,71 @@ app:
     warning-page-path: "/fws/rec/ew/com-page"
     feedback-path: "/fws/rec/ew/feedback"
   mqtt:
-    enabled: true
+    # 统一协议后禁用 MQTT
+    enabled: false
     broker-url: "tcp://47.120.48.64:1883"
     username: "admin"
     password: "admin"
     client-id-prefix: "safetyfire-server"
     ingest:
-      enabled: true
+      # 统一协议后禁用 MQTT 接入
+      enabled: false
       topic-prefix: "safetyfire/ingest"
       qos: 1
       client-id-prefix: "safetyfire-ingest"
+  device-reading:
+    scale:
+      # 温度换算：原始值 / 10（例如 63 -> 6.3℃）
+      temperature-divisor: 10
+      # 湿度换算：原始值 / 10（例如 462 -> 46.2%）
+      humidity-divisor: 10
+      # 液位换算：原始值 / 1000（单位：m）
+      level-divisor: 1000
+  ip-speaker:
+    # IP 音柱 HTTP 接口
+    enabled: true
+    api-url: "http://192.168.1.192/v1/api"
+    volume: 80
+    play-count: 1
+    play-interval: 1
+    queue: false
+    sync-response: false
+    tts-pitch: 50
+    tts-speed: 50
+    tts-voice-name: "xiaoyan"
+    connect-timeout-ms: 2000
+    read-timeout-ms: 4000
+  linkage:
+    tts:
+      # 告警语音播报配置
+      enabled: true
+      default-prefix: "请注意，"
+      mapping:
+        - key: "非法入侵报警"
+          text: "非法入侵报警"
+        - key: "超员报警"
+          text: "超员报警"
+        - key: "通道堵塞报警"
+          text: "通道堵塞报警"
+        - key: "超高超重报警"
+          text: "超高超重报警"
+        - key: "摄像头遮挡偏移报警"
+          text: "摄像头遮挡偏移报警"
+        - key: "温湿度液位超高超低报警"
+          text: "温湿度液位超高超低报警"
+        - key: "证书过期报警"
+          text: "证书过期报警"
+  external:
+    # 人员定位系统地址
+    person-location-url: "http://192.168.1.20"
+  auth:
+    # 登录验证码
+    captcha-enabled: false
+    captcha-length: 4
+    captcha-ttl-seconds: 120
+  server-heartbeat:
+    # 服务器在线判定阈值（毫秒）
+    online-threshold-ms: 120000
 
 springdoc:
   api-docs:

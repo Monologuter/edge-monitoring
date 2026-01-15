@@ -15,6 +15,9 @@ public record DeviceVO(
         String locationName,
         String storeNum,
         String storeroomNum,
+        String ipAddress,
+        String accessUsername,
+        String accessPassword,
         Integer onlineStatus
 ) {
 }

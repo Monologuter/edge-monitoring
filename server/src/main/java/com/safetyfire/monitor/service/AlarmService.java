@@ -25,12 +25,15 @@ public class AlarmService {
     private final AlarmActionLogMapper alarmActionLogMapper;
     private final AlarmPushService alarmPushService;
     private final DataScopeService dataScopeService;
+    private final AlarmTtsService alarmTtsService;
 
-    public AlarmService(AlarmMapper alarmMapper, AlarmActionLogMapper alarmActionLogMapper, AlarmPushService alarmPushService, DataScopeService dataScopeService) {
+    public AlarmService(AlarmMapper alarmMapper, AlarmActionLogMapper alarmActionLogMapper, AlarmPushService alarmPushService,
+                        DataScopeService dataScopeService, AlarmTtsService alarmTtsService) {
         this.alarmMapper = alarmMapper;
         this.alarmActionLogMapper = alarmActionLogMapper;
         this.alarmPushService = alarmPushService;
         this.dataScopeService = dataScopeService;
+        this.alarmTtsService = alarmTtsService;
     }
 
     public PageResponse<AlarmVO> list(int page, int pageSize, String status) {
@@ -82,6 +85,7 @@ public class AlarmService {
         AlarmEntity alarm = alarmMapper.findById(alarmId);
         if (alarm != null) {
             alarmPushService.push(toVo(alarm));
+            alarmTtsService.onAlarmCreated(alarm);
         }
     }
 
@@ -104,9 +108,13 @@ public class AlarmService {
                 e.getWorkflowStatus(),
                 e.getRiskLevel(),
                 e.getDeviceCode(),
+                e.getAlarmFile(),
+                e.getStoreNum(),
+                e.getStoreroomNum(),
                 e.getWarningTime(),
                 e.getClearTime(),
                 e.getArchivedTime(),
+                e.getHandledTime(),
                 e.getHandler(),
                 e.getRemark()
         );

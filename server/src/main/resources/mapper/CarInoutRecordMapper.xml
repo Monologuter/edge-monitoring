@@ -7,6 +7,7 @@
         <result column="company_code" property="companyCode"/>
         <result column="license_plate_number" property="licensePlateNumber"/>
         <result column="car_type" property="carType"/>
+        <result column="driver_name" property="driverName"/>
         <result column="in_out_state" property="inOutState"/>
         <result column="in_out_time" property="inOutTime"/>
         <result column="image_file_id" property="imageFileId"/>
@@ -17,18 +18,45 @@
         VALUES (#{companyCode}, #{licensePlateNumber}, #{carType}, #{inOutState}, #{inOutTime}, #{imageFileId}, NOW(3), NOW(3))
     </insert>
 
+    <select id="findById" resultMap="CarInoutMap">
+        SELECT c.id, c.company_code, c.license_plate_number, c.car_type, c.in_out_state, c.in_out_time, c.image_file_id,
+               car.driver_name
+        FROM car_inout_record c
+                 LEFT JOIN car ON car.license_plate_number = c.license_plate_number
+        WHERE c.id = #{id}
+        LIMIT 1
+    </select>
+
+    <update id="update">
+        UPDATE car_inout_record
+        SET company_code = #{companyCode},
+            license_plate_number = #{licensePlateNumber},
+            car_type = #{carType},
+            in_out_state = #{inOutState},
+            in_out_time = #{inOutTime},
+            image_file_id = #{imageFileId},
+            updated_at = NOW(3)
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM car_inout_record WHERE id = #{id}
+    </delete>
+
     <select id="listByCompanyCodes" resultMap="CarInoutMap">
-        SELECT id, company_code, license_plate_number, car_type, in_out_state, in_out_time, image_file_id
-        FROM car_inout_record
+        SELECT c.id, c.company_code, c.license_plate_number, c.car_type, c.in_out_state, c.in_out_time, c.image_file_id,
+               car.driver_name
+        FROM car_inout_record c
+                 LEFT JOIN car ON car.license_plate_number = c.license_plate_number
         <where>
             <if test="companyCodes != null and companyCodes.size() > 0">
-                company_code IN
+                c.company_code IN
                 <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
                     #{c}
                 </foreach>
             </if>
         </where>
-        ORDER BY id DESC
+        ORDER BY c.id DESC
         LIMIT #{pageSize} OFFSET #{offset}
     </select>
 
@@ -43,6 +71,57 @@
                 </foreach>
             </if>
         </where>
+    </select>
+
+    <select id="countLatestIn" resultType="long">
+        SELECT COUNT(1)
+        FROM car_inout_record c
+                 INNER JOIN (
+                     SELECT license_plate_number, MAX(in_out_time) AS max_time
+                     FROM car_inout_record
+                     <where>
+                         <if test="companyCodes != null and companyCodes.size() > 0">
+                             company_code IN
+                             <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                                 #{c}
+                             </foreach>
+                         </if>
+                     </where>
+                     GROUP BY license_plate_number
+                 ) t ON c.license_plate_number = t.license_plate_number AND c.in_out_time = t.max_time
+        WHERE c.in_out_state = 'IN'
+        <if test="companyCodes != null and companyCodes.size() > 0">
+            AND c.company_code IN
+            <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                #{c}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="countTodayIn" resultType="long">
+        SELECT COUNT(1)
+        FROM car_inout_record
+        WHERE in_out_state = 'IN'
+          AND in_out_time BETWEEN #{startTime} AND #{endTime}
+        <if test="companyCodes != null and companyCodes.size() > 0">
+            AND company_code IN
+            <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                #{c}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="countTodayOut" resultType="long">
+        SELECT COUNT(1)
+        FROM car_inout_record
+        WHERE in_out_state = 'OUT'
+          AND in_out_time BETWEEN #{startTime} AND #{endTime}
+        <if test="companyCodes != null and companyCodes.size() > 0">
+            AND company_code IN
+            <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                #{c}
+            </foreach>
+        </if>
     </select>
 
 </mapper>

@@ -6,32 +6,45 @@
         <id column="id" property="id"/>
         <result column="company_code" property="companyCode"/>
         <result column="license_plate_number" property="licensePlateNumber"/>
+        <result column="driver_name" property="driverName"/>
+        <result column="driver_phone" property="driverPhone"/>
+        <result column="valid_start" property="validStart"/>
+        <result column="valid_end" property="validEnd"/>
+        <result column="license_file_id" property="licenseFileId"/>
         <result column="car_type" property="carType"/>
+        <result column="updated_at" property="updatedAt"/>
     </resultMap>
 
     <select id="findById" resultMap="CarMap">
-        SELECT id, company_code, license_plate_number, car_type
+        SELECT id, company_code, license_plate_number, driver_name, driver_phone, valid_start, valid_end, license_file_id, car_type, updated_at
         FROM car
         WHERE id = #{id}
         LIMIT 1
     </select>
 
     <select id="findByPlate" resultMap="CarMap">
-        SELECT id, company_code, license_plate_number, car_type
+        SELECT id, company_code, license_plate_number, driver_name, driver_phone, valid_start, valid_end, license_file_id, car_type, updated_at
         FROM car
         WHERE license_plate_number = #{plate}
         LIMIT 1
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO car (company_code, license_plate_number, car_type, created_at, updated_at)
-        VALUES (#{companyCode}, #{licensePlateNumber}, #{carType}, NOW(3), NOW(3))
+        INSERT INTO car (company_code, license_plate_number, driver_name, driver_phone, valid_start, valid_end, license_file_id,
+                         car_type, created_at, updated_at)
+        VALUES (#{companyCode}, #{licensePlateNumber}, #{driverName}, #{driverPhone}, #{validStart}, #{validEnd}, #{licenseFileId},
+                #{carType}, NOW(3), NOW(3))
     </insert>
 
     <update id="update">
         UPDATE car
         SET company_code = #{companyCode},
             license_plate_number = #{licensePlateNumber},
+            driver_name = #{driverName},
+            driver_phone = #{driverPhone},
+            valid_start = #{validStart},
+            valid_end = #{validEnd},
+            license_file_id = #{licenseFileId},
             car_type = #{carType},
             updated_at = NOW(3)
         WHERE id = #{id}
@@ -42,7 +55,7 @@
     </delete>
 
     <select id="list" resultMap="CarMap">
-        SELECT id, company_code, license_plate_number, car_type
+        SELECT id, company_code, license_plate_number, driver_name, driver_phone, valid_start, valid_end, license_file_id, car_type, updated_at
         FROM car
         <where>
             <if test="keyword != null and keyword != ''">

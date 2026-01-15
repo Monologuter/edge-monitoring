@@ -1,15 +1,19 @@
 <template>
-  <div>
-    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px">
-      <h2 class="sf-title">角色管理</h2>
-      <div style="display: flex; gap: 10px; align-items: center">
+  <div class="sf-page">
+    <div class="sf-page-head">
+      <div>
+        <h2 class="sf-page-title">角色管理</h2>
+        <div class="sf-page-sub">角色权限与菜单授权</div>
+      </div>
+      <div class="sf-page-actions">
         <el-input v-model="keyword" placeholder="roleKey/roleName" style="width: 220px" clearable />
         <el-button type="primary" @click="openCreate">新增角色</el-button>
         <el-button @click="load">刷新</el-button>
       </div>
     </div>
 
-    <el-table :data="list" v-loading="loading" style="width: 100%">
+    <div class="sf-card sf-table-card">
+      <el-table :data="list" v-loading="loading" style="width: 100%">
       <el-table-column prop="id" label="ID" width="90" />
       <el-table-column prop="roleKey" label="roleKey" width="160" />
       <el-table-column prop="roleName" label="roleName" min-width="180" />
@@ -25,37 +29,40 @@
           <el-button size="small" type="danger" plain :disabled="row.roleKey === 'ADMIN'" @click="onDelete(row.id)">删除</el-button>
         </template>
       </el-table-column>
-    </el-table>
+      </el-table>
 
-    <div style="display: flex; justify-content: flex-end; margin-top: 12px">
-      <el-pagination
-        background
-        layout="prev, pager, next, sizes, total"
-        :total="total"
-        v-model:current-page="page"
-        v-model:page-size="pageSize"
-        @change="load"
-      />
+      <div style="display: flex; justify-content: flex-end; margin-top: 12px">
+        <el-pagination
+          background
+          layout="prev, pager, next, sizes, total"
+          :total="total"
+          v-model:current-page="page"
+          v-model:page-size="pageSize"
+          @change="load"
+        />
+      </div>
     </div>
 
     <el-dialog v-model="dialogVisible" :title="editing?.id ? '编辑角色' : '新增角色'" width="860px">
       <el-form label-width="90px">
-        <el-form-item label="roleKey" required>
+        <div class="sf-form-grid">
+          <el-form-item label="roleKey" required>
           <el-input v-model="form.roleKey" :disabled="Boolean(editing?.id)" placeholder="如 OPERATOR" />
-        </el-form-item>
-        <el-form-item label="roleName" required>
+          </el-form-item>
+          <el-form-item label="roleName" required>
           <el-input v-model="form.roleName" placeholder="如 值班员" />
-        </el-form-item>
-        <el-form-item label="权限" required>
+          </el-form-item>
+          <el-form-item label="权限" required class="sf-form-full">
           <el-select v-model="form.permissionKeys" multiple filterable style="width: 100%" placeholder="选择权限">
             <el-option v-for="p in permissionOptions" :key="p" :label="p" :value="p" />
           </el-select>
-        </el-form-item>
-        <el-form-item label="菜单" required>
+          </el-form-item>
+          <el-form-item label="菜单" required class="sf-form-full">
           <el-select v-model="form.menuKeys" multiple filterable style="width: 100%" placeholder="选择菜单">
             <el-option v-for="m in menuOptions" :key="m.menuKey" :label="`${m.menuName} (${m.menuKey})`" :value="m.menuKey" />
           </el-select>
-        </el-form-item>
+          </el-form-item>
+        </div>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -173,4 +180,3 @@ watch(keyword, () => {
 
 loadMeta().then(load);
 </script>
-

@@ -8,6 +8,7 @@ public class CarInoutRecordEntity {
     private String companyCode;
     private String licensePlateNumber;
     private String carType;
+    private String driverName;
     private String inOutState;
     private Long inOutTime;
     private Long imageFileId;
@@ -42,6 +43,14 @@ public class CarInoutRecordEntity {
 
     public void setCarType(String carType) {
         this.carType = carType;
+    }
+
+    public String getDriverName() {
+        return driverName;
+    }
+
+    public void setDriverName(String driverName) {
+        this.driverName = driverName;
     }
 
     public String getInOutState() {

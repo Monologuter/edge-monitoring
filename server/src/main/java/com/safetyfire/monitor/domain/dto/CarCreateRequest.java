@@ -9,7 +9,11 @@ import jakarta.validation.constraints.Size;
 public record CarCreateRequest(
         @NotBlank @Size(max = 64) String companyCode,
         @NotBlank @Size(max = 32) String licensePlateNumber,
+        @Size(max = 64) String driverName,
+        @Size(max = 32) String driverPhone,
+        java.time.LocalDate validStart,
+        java.time.LocalDate validEnd,
+        Long licenseFileId,
         @Size(max = 32) String carType
 ) {
 }
-

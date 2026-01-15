@@ -7,7 +7,12 @@ public record CarVO(
         Long id,
         String companyCode,
         String licensePlateNumber,
-        String carType
+        String driverName,
+        String driverPhone,
+        java.time.LocalDate validStart,
+        java.time.LocalDate validEnd,
+        Long licenseFileId,
+        String carType,
+        Long dataSyncTime
 ) {
 }
-

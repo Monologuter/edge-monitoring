@@ -10,6 +10,8 @@
         <result column="payload" property="payload"/>
         <result column="status" property="status"/>
         <result column="last_error" property="lastError"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
@@ -18,7 +20,8 @@
     </insert>
 
     <select id="list" resultMap="LinkageMap">
-        SELECT id, alarm_id, linkage_type, target, payload, status, last_error
+        SELECT id, alarm_id, linkage_type, target, payload, status, last_error, UNIX_TIMESTAMP(created_at) * 1000 AS created_at,
+               UNIX_TIMESTAMP(updated_at) * 1000 AS updated_at
         FROM linkage_event
         <where>
             <if test="status != null and status != ''">
@@ -40,7 +43,8 @@
     </select>
 
     <select id="listPending" resultMap="LinkageMap">
-        SELECT id, alarm_id, linkage_type, target, payload, status, last_error
+        SELECT id, alarm_id, linkage_type, target, payload, status, last_error, UNIX_TIMESTAMP(created_at) * 1000 AS created_at,
+               UNIX_TIMESTAMP(updated_at) * 1000 AS updated_at
         FROM linkage_event
         WHERE status = 'PENDING'
         ORDER BY id ASC
@@ -63,4 +67,3 @@
     </update>
 
 </mapper>
-

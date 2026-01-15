@@ -12,6 +12,8 @@ import java.time.LocalDate;
 public record CompanyUpdateRequest(
         @NotNull Long id,
         @NotBlank @Size(max = 255) String companyName,
+        @Size(max = 64) String creditCode,
+        @Size(max = 64) String principalName,
         @Size(max = 64) String businessLicense,
         Long businessLicenseFileId,
         LocalDate businessLicenseStart,
@@ -20,9 +22,12 @@ public record CompanyUpdateRequest(
         @Size(max = 128) String businessLicenseIssuingAuthority,
         @Size(max = 255) String address,
         @Size(max = 255) String registerAddress,
+        @Size(max = 255) String storageAddress,
         @Size(max = 32) String companyStatus,
         Double dosage,
-        Double reservoirArea
+        Double reservoirArea,
+        Double storeroomArea,
+        Double longitude,
+        Double latitude
 ) {
 }
-

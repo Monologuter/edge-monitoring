@@ -1,20 +1,26 @@
 <template>
-  <div>
-    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px">
-      <h2 class="sf-title">告警中心</h2>
-      <div style="display: flex; gap: 10px; align-items: center">
-        <el-select v-model="status" placeholder="状态" style="width: 140px" clearable>
-          <el-option label="ACTIVE" value="ACTIVE" />
-          <el-option label="CLEARED" value="CLEARED" />
-        </el-select>
-        <el-button type="primary" @click="load">刷新</el-button>
+  <div class="sf-page">
+    <div class="sf-page-head">
+      <div>
+        <h2 class="sf-page-title">告警中心</h2>
+        <div class="sf-page-sub">实时风险告警、处置与归档</div>
+      </div>
+      <div class="sf-page-actions">
+        <div class="sf-filter">
+          <el-select v-model="status" placeholder="状态" style="width: 140px" clearable>
+            <el-option label="ACTIVE" value="ACTIVE" />
+            <el-option label="CLEARED" value="CLEARED" />
+          </el-select>
+          <el-button type="primary" @click="load">刷新</el-button>
+        </div>
       </div>
     </div>
 
-    <el-table :data="list" style="width: 100%" v-loading="loading">
+    <div class="sf-card sf-table-card">
+      <el-table :data="list" style="width: 100%" v-loading="loading">
       <el-table-column prop="id" label="ID" width="90" />
-      <el-table-column prop="alarmType" label="类型" min-width="140" />
-      <el-table-column prop="alarmStatus" label="状态" width="110">
+      <el-table-column prop="alarmType" label="报警类型" min-width="160" />
+      <el-table-column prop="alarmStatus" label="报警状态" width="110">
         <template #default="{ row }">
           <span
             class="sf-chip"
@@ -27,11 +33,29 @@
           >
         </template>
       </el-table-column>
-      <el-table-column prop="workflowStatus" label="流程" width="130" />
+      <el-table-column prop="workflowStatus" label="处理状态" width="130" />
       <el-table-column prop="riskLevel" label="等级" width="110" />
-      <el-table-column prop="deviceCode" label="设备编码" min-width="130" />
-      <el-table-column prop="warningTime" label="告警时间" min-width="170">
+      <el-table-column prop="deviceCode" label="设备编号" min-width="130" />
+      <el-table-column prop="storeNum" label="仓库编号" width="120">
+        <template #default="{ row }">{{ row.storeNum || "—" }}</template>
+      </el-table-column>
+      <el-table-column prop="storeroomNum" label="库房编号" width="120">
+        <template #default="{ row }">{{ row.storeroomNum || "—" }}</template>
+      </el-table-column>
+      <el-table-column prop="alarmFile" label="报警图片" width="110">
+        <template #default="{ row }">
+          <el-link v-if="alarmFileUrl(row.alarmFile)" :href="alarmFileUrl(row.alarmFile)" target="_blank">查看</el-link>
+          <span v-else class="sf-muted">—</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="warningTime" label="报警时刻" min-width="170">
         <template #default="{ row }">{{ fmt(row.warningTime) }}</template>
+      </el-table-column>
+      <el-table-column prop="clearTime" label="消除时刻" min-width="170">
+        <template #default="{ row }">{{ row.clearTime ? fmt(row.clearTime) : "—" }}</template>
+      </el-table-column>
+      <el-table-column prop="handledTime" label="处理时间" min-width="170">
+        <template #default="{ row }">{{ row.handledTime ? fmt(row.handledTime) : "—" }}</template>
       </el-table-column>
       <el-table-column prop="archivedTime" label="归档时间" min-width="170">
         <template #default="{ row }">{{ row.archivedTime ? fmt(row.archivedTime) : "—" }}</template>
@@ -45,17 +69,18 @@
           <el-button size="small" type="warning" plain @click="handle(row.id, 'ARCHIVE')">归档</el-button>
         </template>
       </el-table-column>
-    </el-table>
+      </el-table>
 
-    <div style="display: flex; justify-content: flex-end; margin-top: 12px">
-      <el-pagination
-        background
-        layout="prev, pager, next, sizes, total"
-        :total="total"
-        v-model:current-page="page"
-        v-model:page-size="pageSize"
-        @change="load"
-      />
+      <div style="display: flex; justify-content: flex-end; margin-top: 12px">
+        <el-pagination
+          background
+          layout="prev, pager, next, sizes, total"
+          :total="total"
+          v-model:current-page="page"
+          v-model:page-size="pageSize"
+          @change="load"
+        />
+      </div>
     </div>
   </div>
 </template>
@@ -63,7 +88,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { http } from "@/api/http";
+import { fileUrl, http } from "@/api/http";
 import { connectStomp } from "@/realtime/stomp";
 
 type AlarmVO = {
@@ -73,9 +98,13 @@ type AlarmVO = {
   workflowStatus: string;
   riskLevel: string;
   deviceCode: string | null;
+  alarmFile: string | null;
+  storeNum: string | null;
+  storeroomNum: string | null;
   warningTime: number;
   clearTime: number | null;
   archivedTime: number | null;
+  handledTime: number | null;
   handler: string | null;
   remark: string | null;
 };
@@ -97,6 +126,16 @@ function fmt(ts: number) {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(
     d.getSeconds()
   )}`;
+}
+
+function alarmFileUrl(value?: string | null) {
+  if (!value) return "";
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^\\d+$/.test(trimmed)) {
+    return fileUrl(Number(trimmed));
+  }
+  return trimmed;
 }
 
 async function load() {

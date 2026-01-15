@@ -10,7 +10,11 @@ public record PersonVO(
         String idcardMasked,
         String personType,
         Integer isCertified,
-        String phone
+        String phone,
+        Long avatarFileId,
+        Long certFileId,
+        java.time.LocalDate certExpireDate,
+        Integer smsNotify,
+        Long dataSyncTime
 ) {
 }
-

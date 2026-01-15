@@ -10,22 +10,32 @@
         <result column="workflow_status" property="workflowStatus"/>
         <result column="risk_level" property="riskLevel"/>
         <result column="device_code" property="deviceCode"/>
+        <result column="alarm_file" property="alarmFile"/>
+        <result column="store_num" property="storeNum"/>
+        <result column="storeroom_num" property="storeroomNum"/>
         <result column="warning_time" property="warningTime"/>
         <result column="clear_time" property="clearTime"/>
         <result column="archived_time" property="archivedTime"/>
+        <result column="handled_time" property="handledTime"/>
         <result column="handler" property="handler"/>
         <result column="remark" property="remark"/>
     </resultMap>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO alarm_event (company_code, alarm_type, alarm_status, workflow_status, risk_level, device_code, warning_time, clear_time, archived_time, handler, remark, created_at, updated_at)
-        VALUES (#{companyCode}, #{alarmType}, #{alarmStatus}, #{workflowStatus}, #{riskLevel}, #{deviceCode}, #{warningTime}, #{clearTime}, #{archivedTime}, #{handler}, #{remark}, NOW(3), NOW(3))
+        INSERT INTO alarm_event (company_code, alarm_type, alarm_status, workflow_status, risk_level, device_code, alarm_file,
+                                 warning_time, clear_time, archived_time, handler, remark, created_at, updated_at)
+        VALUES (#{companyCode}, #{alarmType}, #{alarmStatus}, #{workflowStatus}, #{riskLevel}, #{deviceCode}, #{alarmFile},
+                #{warningTime}, #{clearTime}, #{archivedTime}, #{handler}, #{remark}, NOW(3), NOW(3))
     </insert>
 
     <select id="findById" resultMap="AlarmEntityMap">
-        SELECT id, company_code, alarm_type, alarm_status, workflow_status, risk_level, device_code, warning_time, clear_time, archived_time, handler, remark
-        FROM alarm_event
-        WHERE id = #{id}
+        SELECT a.id, a.company_code, a.alarm_type, a.alarm_status, a.workflow_status, a.risk_level, a.device_code,
+               a.alarm_file, d.store_num, d.storeroom_num,
+               a.warning_time, a.clear_time, a.archived_time, a.handler, a.remark,
+               (SELECT MAX(action_time) FROM alarm_action_log WHERE alarm_id = a.id AND action = 'HANDLE') AS handled_time
+        FROM alarm_event a
+                 LEFT JOIN device d ON d.device_code = a.device_code
+        WHERE a.id = #{id}
         LIMIT 1
     </select>
 
@@ -114,21 +124,25 @@
     </select>
 
     <select id="list" resultMap="AlarmEntityMap">
-        SELECT id, company_code, alarm_type, alarm_status, workflow_status, risk_level, device_code, warning_time, clear_time, archived_time, handler, remark
-        FROM alarm_event
+        SELECT a.id, a.company_code, a.alarm_type, a.alarm_status, a.workflow_status, a.risk_level, a.device_code,
+               a.alarm_file, d.store_num, d.storeroom_num,
+               a.warning_time, a.clear_time, a.archived_time, a.handler, a.remark,
+               (SELECT MAX(action_time) FROM alarm_action_log WHERE alarm_id = a.id AND action = 'HANDLE') AS handled_time
+        FROM alarm_event a
+                 LEFT JOIN device d ON d.device_code = a.device_code
         <where>
             <if test="status != null and status != ''">
-                alarm_status = #{status}
+                a.alarm_status = #{status}
             </if>
             <if test="companyCodes != null and companyCodes.size() > 0">
                 <if test="status != null and status != ''">AND</if>
-                company_code IN
+                a.company_code IN
                 <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
                     #{c}
                 </foreach>
             </if>
         </where>
-        ORDER BY id DESC
+        ORDER BY a.id DESC
         LIMIT #{pageSize} OFFSET #{offset}
     </select>
 

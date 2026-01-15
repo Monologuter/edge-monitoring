@@ -6,6 +6,7 @@ import com.safetyfire.monitor.config.Audit;
 import com.safetyfire.monitor.domain.dto.StoreCreateRequest;
 import com.safetyfire.monitor.domain.dto.StoreUpdateRequest;
 import com.safetyfire.monitor.domain.vo.StoreVO;
+import com.safetyfire.monitor.domain.vo.ImportResultVO;
 import com.safetyfire.monitor.service.StoreService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -13,6 +14,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 仓库接口（FR-04）。
@@ -44,6 +46,13 @@ public class StoreController {
         return ApiResponse.ok(storeService.create(req));
     }
 
+    @PostMapping("/import")
+    @PreAuthorize("hasAuthority('store:manage')")
+    @Audit(action = "store.import")
+    public ApiResponse<ImportResultVO> importCsv(@RequestPart("file") MultipartFile file) {
+        return ApiResponse.ok(storeService.importCsv(file));
+    }
+
     @PutMapping
     @PreAuthorize("hasAuthority('store:manage')")
     @Audit(action = "store.update")
@@ -60,4 +69,3 @@ public class StoreController {
         return ApiResponse.ok(null);
     }
 }
-

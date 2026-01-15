@@ -117,14 +117,24 @@ function render() {
     backgroundColor: "transparent",
     grid: { left: 40, right: 18, top: 22, bottom: 30 },
     tooltip: { trigger: "axis" },
-    xAxis: { type: "category", data: buildHours(), axisLabel: { color: "rgba(255,255,255,0.7)" }, axisLine: { lineStyle: { color: "rgba(255,255,255,0.14)" } } },
-    yAxis: { type: "value", axisLabel: { color: "rgba(255,255,255,0.7)" }, splitLine: { lineStyle: { color: "rgba(255,255,255,0.08)" } } },
+    xAxis: { type: "category", data: buildHours(), axisLabel: { color: "rgba(60, 73, 99, 0.6)" }, axisLine: { lineStyle: { color: "rgba(70, 88, 124, 0.12)" } } },
+    yAxis: { type: "value", axisLabel: { color: "rgba(60, 73, 99, 0.6)" }, splitLine: { lineStyle: { color: "rgba(70, 88, 124, 0.08)" } } },
     series: [
       {
         name: "告警",
-        type: "bar",
+        type: "line",
+        smooth: true,
         data: overview.value.alarmTrend24h || [],
-        itemStyle: { color: "rgba(42,166,255,0.75)" }
+        lineStyle: { width: 3, color: "rgba(47,107,255,0.9)" },
+        areaStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: "rgba(47,107,255,0.22)" },
+            { offset: 1, color: "rgba(47,107,255,0.02)" }
+          ])
+        },
+        symbol: "circle",
+        symbolSize: 6,
+        itemStyle: { color: "rgba(47,107,255,0.9)" }
       }
     ]
   });
@@ -196,7 +206,7 @@ onUnmounted(() => {
   height: 8px;
   border-radius: 999px;
   background: var(--sf-success);
-  box-shadow: 0 0 0 6px rgba(51, 209, 122, 0.1);
+  box-shadow: 0 0 0 6px rgba(47, 107, 255, 0.1);
 }
 .grid {
   display: grid;
@@ -211,6 +221,7 @@ onUnmounted(() => {
   font-size: 13px;
   color: var(--sf-text-1);
   margin-bottom: 10px;
+  font-family: var(--sf-font-display);
 }
 .kpis {
   display: grid;
@@ -219,8 +230,8 @@ onUnmounted(() => {
   margin-bottom: 10px;
 }
 .kpi {
-  background: rgba(0, 0, 0, 0.12);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.9), rgba(234, 240, 247, 0.75));
+  border: 1px solid rgba(15, 42, 74, 0.08);
   border-radius: 12px;
   padding: 10px 10px;
 }
@@ -251,10 +262,10 @@ onUnmounted(() => {
   padding-right: 6px;
 }
 .alarmItem {
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(15, 42, 74, 0.08);
   border-radius: 12px;
   padding: 10px 10px;
-  background: rgba(0, 0, 0, 0.08);
+  background: #ffffff;
 }
 .line {
   display: flex;
@@ -265,12 +276,12 @@ onUnmounted(() => {
   font-size: 12px;
   padding: 2px 8px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--sf-outline);
   color: var(--sf-text-1);
 }
 .tag.active {
-  border-color: rgba(255, 77, 79, 0.28);
-  color: rgba(255, 255, 255, 0.9);
+  border-color: rgba(255, 109, 122, 0.3);
+  color: rgba(255, 109, 122, 0.95);
 }
 .name {
   font-size: 13px;
@@ -283,4 +294,3 @@ onUnmounted(() => {
   font-size: 12px;
 }
 </style>
-

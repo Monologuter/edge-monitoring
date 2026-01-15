@@ -1,10 +1,18 @@
 <template>
-  <div>
-    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px">
-      <h2 class="sf-title">硬件数据（上报日志）</h2>
-      <div style="display: flex; gap: 10px; align-items: center">
+  <div class="sf-page">
+    <div class="sf-page-head">
+      <div>
+        <h2 class="sf-page-title">硬件数据（上报日志）</h2>
+        <div class="sf-page-sub">HTTP 通道上报记录与解析状态</div>
+      </div>
+      <div class="sf-page-actions">
+        <el-button @click="load">查询</el-button>
+      </div>
+    </div>
+
+    <div class="sf-section" style="margin-bottom: 14px">
+      <div class="sf-filter">
         <el-select v-model="filters.channel" placeholder="通道" clearable style="width: 120px">
-          <el-option label="MQTT" value="MQTT" />
           <el-option label="HTTP" value="HTTP" />
         </el-select>
         <el-select v-model="filters.messageType" placeholder="类型" clearable style="width: 180px">
@@ -25,7 +33,27 @@
       </div>
     </div>
 
-    <el-table :data="list" style="width: 100%" v-loading="loading">
+    <div class="sf-kpi sf-stagger" style="margin-bottom: 14px">
+      <div class="sf-card sf-kpi-item" style="--i: 40ms">
+        <div class="sf-kpi-title">本页上报</div>
+        <div class="sf-kpi-value">{{ list.length }}</div>
+      </div>
+      <div class="sf-card sf-kpi-item" style="--i: 80ms">
+        <div class="sf-kpi-title">解析成功</div>
+        <div class="sf-kpi-value" style="color: rgba(39, 183, 167, 0.95)">{{ successCount }}</div>
+      </div>
+      <div class="sf-card sf-kpi-item" style="--i: 120ms">
+        <div class="sf-kpi-title">解析失败</div>
+        <div class="sf-kpi-value" style="color: rgba(255, 107, 107, 0.95)">{{ failCount }}</div>
+      </div>
+      <div class="sf-card sf-kpi-item" style="--i: 160ms">
+        <div class="sf-kpi-title">失败率</div>
+        <div class="sf-kpi-value">{{ failRate }}%</div>
+      </div>
+    </div>
+
+    <div class="sf-card sf-table-card">
+      <el-table :data="list" style="width: 100%" v-loading="loading">
       <el-table-column prop="id" label="ID" width="90" />
       <el-table-column prop="receiveTimeMs" label="时间" width="170">
         <template #default="{ row }">
@@ -33,7 +61,11 @@
         </template>
       </el-table-column>
       <el-table-column prop="ingestChannel" label="通道" width="90" />
-      <el-table-column prop="messageType" label="类型" width="160" />
+      <el-table-column prop="messageType" label="类型" width="160">
+        <template #default="{ row }">
+          <span class="sf-chip">{{ row.messageType }}</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="companyCode" label="企业" width="110">
         <template #default="{ row }">
           <span class="sf-chip">{{ row.companyCode || "-" }}</span>
@@ -54,22 +86,23 @@
           <el-button size="small" @click="openPayload(row)">查看</el-button>
         </template>
       </el-table-column>
-    </el-table>
+      </el-table>
 
-    <div style="display: flex; justify-content: flex-end; margin-top: 12px">
-      <el-pagination
-        background
-        layout="prev, pager, next, sizes, total"
-        :total="total"
-        v-model:current-page="page"
-        v-model:page-size="pageSize"
-        @change="load"
-      />
+      <div style="display: flex; justify-content: flex-end; margin-top: 12px">
+        <el-pagination
+          background
+          layout="prev, pager, next, sizes, total"
+          :total="total"
+          v-model:current-page="page"
+          v-model:page-size="pageSize"
+          @change="load"
+        />
+      </div>
     </div>
 
     <el-dialog v-model="payloadVisible" title="原始上报数据" width="860px">
       <div style="display: grid; gap: 10px">
-        <div class="sf-muted">提示：MQTT 会保存 envelope JSON；HTTP 会保存 body JSON。</div>
+        <div class="sf-muted">提示：HTTP 会保存 body JSON。</div>
         <el-input v-model="payloadText" type="textarea" :rows="16" readonly />
       </div>
       <template #footer>
@@ -81,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { http } from "@/api/http";
 
@@ -101,7 +134,7 @@ type HardwareIngestLog = {
 };
 
 const filters = reactive({
-  channel: "" as "" | "MQTT" | "HTTP",
+  channel: "" as "" | "HTTP",
   messageType: "" as "" | "device-reading" | "alarm" | "person-inout" | "car-inout" | "server-heartbeat",
   ok: null as null | 0 | 1,
   apiKey: "",
@@ -117,6 +150,10 @@ const pageSize = ref(20);
 
 const payloadVisible = ref(false);
 const payloadText = ref("");
+
+const successCount = computed(() => list.value.filter((item) => item.parsedOk === 1).length);
+const failCount = computed(() => list.value.filter((item) => item.parsedOk !== 1).length);
+const failRate = computed(() => (list.value.length ? Math.round((failCount.value / list.value.length) * 100) : 0));
 
 function formatTime(ms?: number) {
   if (!ms) return "-";
@@ -175,4 +212,3 @@ watch(
 
 load();
 </script>
-

@@ -6,6 +6,7 @@ import com.safetyfire.monitor.config.Audit;
 import com.safetyfire.monitor.domain.dto.CompanyCreateRequest;
 import com.safetyfire.monitor.domain.dto.CompanyUpdateRequest;
 import com.safetyfire.monitor.domain.vo.CompanyVO;
+import com.safetyfire.monitor.domain.vo.ImportResultVO;
 import com.safetyfire.monitor.service.CompanyService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -13,6 +14,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 企业档案接口（FR-01）。
@@ -48,6 +50,13 @@ public class CompanyController {
     @Audit(action = "company.create")
     public ApiResponse<Long> create(@Valid @RequestBody CompanyCreateRequest req) {
         return ApiResponse.ok(companyService.create(req));
+    }
+
+    @PostMapping("/import")
+    @PreAuthorize("hasAuthority('admin:manage')")
+    @Audit(action = "company.import")
+    public ApiResponse<ImportResultVO> importCsv(@RequestPart("file") MultipartFile file) {
+        return ApiResponse.ok(companyService.importCsv(file));
     }
 
     @PutMapping

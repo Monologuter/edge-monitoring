@@ -35,9 +35,10 @@ public class DeviceController {
     @PreAuthorize("hasAuthority('device:manage')")
     public ApiResponse<PageResponse<DeviceVO>> list(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(200) int pageSize
+            @RequestParam(defaultValue = "20") @Min(1) @Max(200) int pageSize,
+            @RequestParam(required = false) Integer deviceType
     ) {
-        return ApiResponse.ok(deviceService.list(page, pageSize));
+        return ApiResponse.ok(deviceService.list(page, pageSize, deviceType));
     }
 
     @PostMapping

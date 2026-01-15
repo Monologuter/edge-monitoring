@@ -8,10 +8,12 @@
         <result column="computer_name" property="computerName"/>
         <result column="ip" property="ip"/>
         <result column="original_id" property="originalId"/>
+        <result column="last_heartbeat_time" property="lastHeartbeatTime"/>
+        <result column="created_at" property="createdAt"/>
     </resultMap>
 
     <select id="findByIp" resultMap="ServerMachineMap">
-        SELECT id, company_code, computer_name, ip, original_id
+        SELECT id, company_code, computer_name, ip, original_id, created_at
         FROM server_machine
         WHERE ip = #{ip}
         LIMIT 1
@@ -32,17 +34,28 @@
     </update>
 
     <select id="list" resultMap="ServerMachineMap">
-        SELECT id, company_code, computer_name, ip, original_id
-        FROM server_machine
+        SELECT sm.id,
+               sm.company_code,
+               sm.computer_name,
+               sm.ip,
+               sm.original_id,
+               sm.created_at,
+               hb.last_heartbeat_time
+        FROM server_machine sm
+                 LEFT JOIN (
+                     SELECT ip, MAX(heartbeat_time) AS last_heartbeat_time
+                     FROM server_heartbeat
+                     GROUP BY ip
+                 ) hb ON hb.ip = sm.ip
         <where>
             <if test="companyCodes != null and companyCodes.size() > 0">
-                company_code IN
+                sm.company_code IN
                 <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
                     #{c}
                 </foreach>
             </if>
         </where>
-        ORDER BY id DESC
+        ORDER BY sm.id DESC
         LIMIT #{pageSize} OFFSET #{offset}
     </select>
 

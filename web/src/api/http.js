@@ -1,6 +1,7 @@
 import axios from "axios";
 import { clearTokens, readTokens, writeTokens } from "@/auth/token";
-export const API_BASE_URL = import.meta.env.VITE_API_BASE || "http://localhost:9000";
+const RAW_API_BASE_URL = import.meta.env.VITE_API_BASE || "http://localhost:9000";
+export const API_BASE_URL = RAW_API_BASE_URL.replace(/^htp(s?):/i, "http$1:");
 export function wsBaseUrl() {
     return API_BASE_URL.replace(/^http:/, "ws:").replace(/^https:/, "wss:");
 }

@@ -6,6 +6,7 @@ import com.safetyfire.monitor.config.Audit;
 import com.safetyfire.monitor.domain.dto.CarCreateRequest;
 import com.safetyfire.monitor.domain.dto.CarUpdateRequest;
 import com.safetyfire.monitor.domain.vo.CarVO;
+import com.safetyfire.monitor.domain.vo.ImportResultVO;
 import com.safetyfire.monitor.service.CarService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -13,6 +14,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 车辆档案接口（FR-03）。
@@ -44,6 +46,13 @@ public class CarController {
         return ApiResponse.ok(carService.create(req));
     }
 
+    @PostMapping("/import")
+    @PreAuthorize("hasAuthority('car:manage')")
+    @Audit(action = "car.import")
+    public ApiResponse<ImportResultVO> importCsv(@RequestPart("file") MultipartFile file) {
+        return ApiResponse.ok(carService.importCsv(file));
+    }
+
     @PutMapping
     @PreAuthorize("hasAuthority('car:manage')")
     @Audit(action = "car.update")
@@ -60,4 +69,3 @@ public class CarController {
         return ApiResponse.ok(null);
     }
 }
-

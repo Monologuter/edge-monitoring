@@ -14,6 +14,9 @@
         <result column="location_name" property="locationName"/>
         <result column="store_num" property="storeNum"/>
         <result column="storeroom_num" property="storeroomNum"/>
+        <result column="ip_address" property="ipAddress"/>
+        <result column="access_username" property="accessUsername"/>
+        <result column="access_password" property="accessPassword"/>
         <result column="online_status" property="onlineStatus"/>
         <result column="last_heartbeat_time" property="lastHeartbeatTime"/>
     </resultMap>
@@ -30,6 +33,9 @@
                location_name,
                store_num,
                storeroom_num,
+               ip_address,
+               access_username,
+               access_password,
                online_status,
                last_heartbeat_time
         FROM device
@@ -49,6 +55,9 @@
                location_name,
                store_num,
                storeroom_num,
+               ip_address,
+               access_username,
+               access_password,
                online_status,
                last_heartbeat_time
         FROM device
@@ -58,9 +67,9 @@
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO device (company_code, device_code, device_name, device_type, unit, lower_limit, upper_limit, location_name, store_num, storeroom_num,
-                            online_status, last_heartbeat_time, created_at, updated_at)
+                            ip_address, access_username, access_password, online_status, last_heartbeat_time, created_at, updated_at)
         VALUES (#{companyCode}, #{deviceCode}, #{deviceName}, #{deviceType}, #{unit}, #{lowerLimit}, #{upperLimit}, #{locationName}, #{storeNum}, #{storeroomNum},
-                #{onlineStatus}, #{lastHeartbeatTime}, NOW(3), NOW(3))
+                #{ipAddress}, #{accessUsername}, #{accessPassword}, #{onlineStatus}, #{lastHeartbeatTime}, NOW(3), NOW(3))
     </insert>
 
     <update id="update">
@@ -75,6 +84,9 @@
             location_name = #{locationName},
             store_num = #{storeNum},
             storeroom_num = #{storeroomNum},
+            ip_address = #{ipAddress},
+            access_username = #{accessUsername},
+            access_password = #{accessPassword},
             online_status = #{onlineStatus},
             updated_at = NOW(3)
         WHERE id = #{id}
@@ -96,6 +108,9 @@
                location_name,
                store_num,
                storeroom_num,
+               ip_address,
+               access_username,
+               access_password,
                online_status,
                last_heartbeat_time
         FROM device
@@ -105,6 +120,10 @@
                 <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
                     #{c}
                 </foreach>
+            </if>
+            <if test="deviceType != null">
+                <if test="companyCodes != null and companyCodes.size() > 0">AND</if>
+                device_type = #{deviceType}
             </if>
         </where>
         ORDER BY id DESC
@@ -120,6 +139,10 @@
                 <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
                     #{c}
                 </foreach>
+            </if>
+            <if test="deviceType != null">
+                <if test="companyCodes != null and companyCodes.size() > 0">AND</if>
+                device_type = #{deviceType}
             </if>
         </where>
     </select>

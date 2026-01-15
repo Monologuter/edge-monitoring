@@ -2,7 +2,9 @@ package com.safetyfire.monitor.controller;
 
 import com.safetyfire.monitor.common.ApiResponse;
 import com.safetyfire.monitor.common.PageResponse;
+import com.safetyfire.monitor.config.ServerHeartbeatProperties;
 import com.safetyfire.monitor.domain.entity.ServerMachineEntity;
+import com.safetyfire.monitor.domain.vo.ServerMachineVO;
 import com.safetyfire.monitor.mapper.ServerMachineMapper;
 import com.safetyfire.monitor.security.DataScopeService;
 import jakarta.validation.constraints.Max;
@@ -25,15 +27,17 @@ import java.util.List;
 public class ServerMachineController {
     private final ServerMachineMapper mapper;
     private final DataScopeService dataScopeService;
+    private final ServerHeartbeatProperties heartbeatProperties;
 
-    public ServerMachineController(ServerMachineMapper mapper, DataScopeService dataScopeService) {
+    public ServerMachineController(ServerMachineMapper mapper, DataScopeService dataScopeService, ServerHeartbeatProperties heartbeatProperties) {
         this.mapper = mapper;
         this.dataScopeService = dataScopeService;
+        this.heartbeatProperties = heartbeatProperties;
     }
 
     @GetMapping
     @PreAuthorize("hasAuthority('device:manage')")
-    public ApiResponse<PageResponse<ServerMachineEntity>> list(
+    public ApiResponse<PageResponse<ServerMachineVO>> list(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(200) int pageSize
     ) {
@@ -41,6 +45,20 @@ public class ServerMachineController {
         List<String> scope = dataScopeService.currentCompanyCodesOrAll();
         List<ServerMachineEntity> list = mapper.list(scope, offset, pageSize);
         long total = mapper.count(scope);
-        return ApiResponse.ok(new PageResponse<>(list, page, pageSize, total));
+        long now = System.currentTimeMillis();
+        long threshold = heartbeatProperties.getOnlineThresholdMs();
+        List<ServerMachineVO> vos = list.stream()
+                .map(e -> new ServerMachineVO(
+                        e.getId(),
+                        e.getCompanyCode(),
+                        e.getComputerName(),
+                        e.getIp(),
+                        e.getOriginalId(),
+                        e.getLastHeartbeatTime() != null && e.getLastHeartbeatTime() >= now - threshold ? 1 : 0,
+                        e.getLastHeartbeatTime(),
+                        e.getCreatedAt() == null ? null : e.getCreatedAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
+                ))
+                .toList();
+        return ApiResponse.ok(new PageResponse<>(vos, page, pageSize, total));
     }
 }

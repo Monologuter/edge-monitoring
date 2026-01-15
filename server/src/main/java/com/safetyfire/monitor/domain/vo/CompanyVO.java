@@ -9,6 +9,8 @@ public record CompanyVO(
         Long id,
         String companyCode,
         String companyName,
+        String creditCode,
+        String principalName,
         String businessLicense,
         Long businessLicenseFileId,
         LocalDate businessLicenseStart,
@@ -17,9 +19,12 @@ public record CompanyVO(
         String businessLicenseIssuingAuthority,
         String address,
         String registerAddress,
+        String storageAddress,
         String companyStatus,
         Double dosage,
-        Double reservoirArea
+        Double reservoirArea,
+        Double storeroomArea,
+        Double longitude,
+        Double latitude
 ) {
 }
-

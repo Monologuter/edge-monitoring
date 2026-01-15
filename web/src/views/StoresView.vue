@@ -1,23 +1,33 @@
 <template>
-  <div>
-    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px">
-      <h2 class="sf-title">仓库库房</h2>
-      <div style="display: flex; gap: 10px; align-items: center">
+  <div class="sf-page">
+    <div class="sf-page-head">
+      <div>
+        <h2 class="sf-page-title">仓库库房</h2>
+        <div class="sf-page-sub">仓库、库房与核定配置</div>
+      </div>
+      <div class="sf-page-actions">
+        <span class="sf-badge">仓库数量 {{ storesTotal }}</span>
+        <span class="sf-badge">库房数量 {{ storeroomsTotal }}</span>
         <el-input v-model="keyword" placeholder="编码/名称/企业编码" style="width: 240px" clearable />
         <el-button type="primary" @click="openCreateStore">新增仓库</el-button>
+        <el-upload :show-file-list="false" :before-upload="importStores" accept=".csv">
+          <el-button>导入仓库</el-button>
+        </el-upload>
         <el-button @click="loadStores">刷新</el-button>
       </div>
     </div>
 
-    <el-tabs v-model="tab">
+    <div class="sf-card sf-table-card">
+      <el-tabs v-model="tab">
       <el-tab-pane label="仓库" name="store">
         <el-table :data="stores" v-loading="loadingStores" style="width: 100%">
           <el-table-column prop="companyCode" label="企业编码" min-width="140" />
           <el-table-column prop="storeNum" label="仓库编码" min-width="140" />
           <el-table-column prop="storeName" label="仓库名称" min-width="180" />
+          <el-table-column prop="area" label="仓库面积（m²）" width="140" />
           <el-table-column prop="dangerLevel" label="危险等级" width="110" />
-          <el-table-column prop="quotaDosage" label="核定药量" width="110" />
-          <el-table-column prop="quotaPeople" label="核定人数" width="110" />
+          <el-table-column prop="quotaDosage" label="核定药量（kg）" width="130" />
+          <el-table-column prop="quotaPeople" label="核定人数（人）" width="130" />
           <el-table-column label="操作" width="200" fixed="right">
             <template #default="{ row }">
               <el-button size="small" @click="openEditStore(row)">编辑</el-button>
@@ -39,16 +49,22 @@
       </el-tab-pane>
 
       <el-tab-pane label="库房" name="storeroom">
-        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px">
+        <div class="sf-filter" style="margin-bottom: 10px">
           <el-input v-model="storeroomStoreNum" placeholder="仓库编码（筛选）" style="width: 200px" clearable />
           <el-button type="primary" @click="openCreateStoreroom">新增库房</el-button>
+          <el-upload :show-file-list="false" :before-upload="importStorerooms" accept=".csv">
+            <el-button>导入库房</el-button>
+          </el-upload>
           <el-button @click="loadStorerooms">刷新</el-button>
         </div>
         <el-table :data="storerooms" v-loading="loadingStorerooms" style="width: 100%">
           <el-table-column prop="storeNum" label="仓库编码" min-width="140" />
           <el-table-column prop="storeroomNum" label="库房编码" min-width="140" />
           <el-table-column prop="storeroomName" label="库房名称" min-width="180" />
+          <el-table-column prop="area" label="库房面积（m²）" width="140" />
           <el-table-column prop="dangerLevel" label="危险等级" width="110" />
+          <el-table-column prop="quotaDosage" label="核定药量（t）" width="120" />
+          <el-table-column prop="quotaPeople" label="核定人数（人）" width="130" />
           <el-table-column label="操作" width="160" fixed="right">
             <template #default="{ row }">
               <el-button size="small" @click="openEditStoreroom(row)">编辑</el-button>
@@ -67,16 +83,20 @@
           />
         </div>
       </el-tab-pane>
-    </el-tabs>
+      </el-tabs>
+    </div>
 
     <el-dialog v-model="storeDialog" :title="storeEditing?.id ? '编辑仓库' : '新增仓库'" width="640px">
       <el-form label-width="100px">
-        <el-form-item label="企业编码" required><el-input v-model="storeForm.companyCode" /></el-form-item>
-        <el-form-item label="仓库编码" required><el-input v-model="storeForm.storeNum" /></el-form-item>
-        <el-form-item label="仓库名称" required><el-input v-model="storeForm.storeName" /></el-form-item>
-        <el-form-item label="危险等级"><el-input v-model="storeForm.dangerLevel" placeholder="01/02/03" /></el-form-item>
-        <el-form-item label="核定药量"><el-input-number v-model="storeForm.quotaDosage" style="width: 100%" /></el-form-item>
-        <el-form-item label="核定人数"><el-input-number v-model="storeForm.quotaPeople" style="width: 100%" /></el-form-item>
+        <div class="sf-form-grid">
+          <el-form-item label="企业编码" required><el-input v-model="storeForm.companyCode" /></el-form-item>
+          <el-form-item label="仓库编码" required><el-input v-model="storeForm.storeNum" /></el-form-item>
+          <el-form-item label="仓库名称" required><el-input v-model="storeForm.storeName" /></el-form-item>
+          <el-form-item label="仓库面积（m²）"><el-input-number v-model="storeForm.area" style="width: 100%" /></el-form-item>
+          <el-form-item label="危险等级"><el-input v-model="storeForm.dangerLevel" placeholder="01/02/03" /></el-form-item>
+          <el-form-item label="核定药量（kg）"><el-input-number v-model="storeForm.quotaDosage" style="width: 100%" /></el-form-item>
+          <el-form-item label="核定人数（人）"><el-input-number v-model="storeForm.quotaPeople" style="width: 100%" /></el-form-item>
+        </div>
       </el-form>
       <template #footer>
         <el-button @click="storeDialog = false">取消</el-button>
@@ -86,12 +106,15 @@
 
     <el-dialog v-model="storeroomDialog" :title="storeroomEditing?.id ? '编辑库房' : '新增库房'" width="640px">
       <el-form label-width="100px">
-        <el-form-item label="仓库编码" required><el-input v-model="storeroomForm.storeNum" /></el-form-item>
-        <el-form-item label="库房编码" required><el-input v-model="storeroomForm.storeroomNum" /></el-form-item>
-        <el-form-item label="库房名称" required><el-input v-model="storeroomForm.storeroomName" /></el-form-item>
-        <el-form-item label="危险等级"><el-input v-model="storeroomForm.dangerLevel" placeholder="01/02/03" /></el-form-item>
-        <el-form-item label="核定药量"><el-input-number v-model="storeroomForm.quotaDosage" style="width: 100%" /></el-form-item>
-        <el-form-item label="核定人数"><el-input-number v-model="storeroomForm.quotaPeople" style="width: 100%" /></el-form-item>
+        <div class="sf-form-grid">
+          <el-form-item label="仓库编码" required><el-input v-model="storeroomForm.storeNum" /></el-form-item>
+          <el-form-item label="库房编码" required><el-input v-model="storeroomForm.storeroomNum" /></el-form-item>
+          <el-form-item label="库房名称" required><el-input v-model="storeroomForm.storeroomName" /></el-form-item>
+          <el-form-item label="库房面积（m²）"><el-input-number v-model="storeroomForm.area" style="width: 100%" /></el-form-item>
+          <el-form-item label="危险等级"><el-input v-model="storeroomForm.dangerLevel" placeholder="01/02/03" /></el-form-item>
+          <el-form-item label="核定药量（t）"><el-input-number v-model="storeroomForm.quotaDosage" style="width: 100%" /></el-form-item>
+          <el-form-item label="核定人数（人）"><el-input-number v-model="storeroomForm.quotaPeople" style="width: 100%" /></el-form-item>
+        </div>
       </el-form>
       <template #footer>
         <el-button @click="storeroomDialog = false">取消</el-button>
@@ -104,7 +127,7 @@
 <script setup lang="ts">
 import { reactive, ref, watch } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { http } from "@/api/http";
+import { http, rawHttp } from "@/api/http";
 
 type PageResponse<T> = { list: T[]; page: number; pageSize: number; total: number };
 
@@ -113,6 +136,7 @@ type StoreVO = {
   companyCode: string;
   storeNum: string;
   storeName: string;
+  area: number | null;
   dangerLevel: string | null;
   quotaDosage: number | null;
   quotaPeople: number | null;
@@ -123,6 +147,7 @@ type StoreroomVO = {
   storeNum: string;
   storeroomNum: string;
   storeroomName: string;
+  area: number | null;
   dangerLevel: string | null;
   quotaDosage: number | null;
   quotaPeople: number | null;
@@ -151,6 +176,7 @@ const storeForm = reactive({
   companyCode: "",
   storeNum: "",
   storeName: "",
+  area: null as number | null,
   dangerLevel: "",
   quotaDosage: null as number | null,
   quotaPeople: null as number | null
@@ -163,6 +189,7 @@ const storeroomForm = reactive({
   storeNum: "",
   storeroomNum: "",
   storeroomName: "",
+  area: null as number | null,
   dangerLevel: "",
   quotaDosage: null as number | null,
   quotaPeople: null as number | null
@@ -207,7 +234,15 @@ function filterStorerooms(storeNum: string) {
 
 function openCreateStore() {
   storeEditing.value = null;
-  Object.assign(storeForm, { companyCode: "", storeNum: "", storeName: "", dangerLevel: "", quotaDosage: null, quotaPeople: null });
+  Object.assign(storeForm, {
+    companyCode: "",
+    storeNum: "",
+    storeName: "",
+    area: null,
+    dangerLevel: "",
+    quotaDosage: null,
+    quotaPeople: null
+  });
   storeDialog.value = true;
 }
 
@@ -217,6 +252,7 @@ function openEditStore(row: StoreVO) {
     companyCode: row.companyCode,
     storeNum: row.storeNum,
     storeName: row.storeName,
+    area: row.area ?? null,
     dangerLevel: row.dangerLevel || "",
     quotaDosage: row.quotaDosage ?? null,
     quotaPeople: row.quotaPeople ?? null
@@ -264,6 +300,7 @@ function openCreateStoreroom() {
     storeNum: storeroomStoreNum.value || "",
     storeroomNum: "",
     storeroomName: "",
+    area: null,
     dangerLevel: "",
     quotaDosage: null,
     quotaPeople: null
@@ -277,6 +314,7 @@ function openEditStoreroom(row: StoreroomVO) {
     storeNum: row.storeNum,
     storeroomNum: row.storeroomNum,
     storeroomName: row.storeroomName,
+    area: row.area ?? null,
     dangerLevel: row.dangerLevel || "",
     quotaDosage: row.quotaDosage ?? null,
     quotaPeople: row.quotaPeople ?? null
@@ -318,6 +356,36 @@ async function deleteStoreroom(id: number) {
   }
 }
 
+async function importStores(file: File) {
+  const fd = new FormData();
+  fd.append("file", file);
+  try {
+    const res = await rawHttp.post("/api/v1/stores/import", fd, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+    ElMessage.success(`导入完成：成功 ${res.successCount} 条，失败 ${res.failCount} 条`);
+    await loadStores();
+  } catch (e: any) {
+    ElMessage.error(e?.message || "导入失败");
+  }
+  return false;
+}
+
+async function importStorerooms(file: File) {
+  const fd = new FormData();
+  fd.append("file", file);
+  try {
+    const res = await rawHttp.post("/api/v1/storerooms/import", fd, {
+      headers: { "Content-Type": "multipart/form-data" }
+    });
+    ElMessage.success(`导入完成：成功 ${res.successCount} 条，失败 ${res.failCount} 条`);
+    await loadStorerooms();
+  } catch (e: any) {
+    ElMessage.error(e?.message || "导入失败");
+  }
+  return false;
+}
+
 watch(keyword, () => {
   storesPage.value = 1;
   loadStores();
@@ -330,4 +398,3 @@ watch(tab, () => {
 
 loadStores();
 </script>
-

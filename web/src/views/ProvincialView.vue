@@ -1,14 +1,18 @@
 <template>
-  <div>
-    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px">
-      <h2 class="sf-title">省厅对接</h2>
-      <div style="display: flex; gap: 10px; align-items: center">
+  <div class="sf-page">
+    <div class="sf-page-head">
+      <div>
+        <h2 class="sf-page-title">省厅对接</h2>
+        <div class="sf-page-sub">预警上报、反馈与报文查看</div>
+      </div>
+      <div class="sf-page-actions">
         <el-button type="primary" @click="openFeedback">提交反馈</el-button>
         <el-button @click="loadAll">刷新</el-button>
       </div>
     </div>
 
-    <el-tabs v-model="tab">
+    <div class="sf-card sf-table-card">
+      <el-tabs v-model="tab">
       <el-tab-pane label="预警列表" name="warnings">
         <el-table :data="warnings" v-loading="loadingWarnings" style="width: 100%">
           <el-table-column prop="externalId" label="预警ID" min-width="160" />
@@ -54,12 +58,17 @@
           />
         </div>
       </el-tab-pane>
-    </el-tabs>
+      </el-tabs>
+    </div>
 
     <el-dialog v-model="feedbackDialog" title="提交省厅预警反馈" width="560px">
       <el-form label-width="90px">
-        <el-form-item label="预警ID" required><el-input v-model="feedbackForm.externalId" /></el-form-item>
-        <el-form-item label="反馈内容" required><el-input v-model="feedbackForm.feedback" type="textarea" :rows="3" /></el-form-item>
+        <div class="sf-form-grid">
+          <el-form-item label="预警ID" required><el-input v-model="feedbackForm.externalId" /></el-form-item>
+          <el-form-item label="反馈内容" required class="sf-form-full">
+            <el-input v-model="feedbackForm.feedback" type="textarea" :rows="3" />
+          </el-form-item>
+        </div>
       </el-form>
       <template #footer>
         <el-button @click="feedbackDialog = false">取消</el-button>
@@ -178,4 +187,3 @@ watch(tab, () => {
 
 loadWarnings();
 </script>
-

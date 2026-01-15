@@ -1,6 +1,6 @@
 <template>
   <div class="wrap">
-    <div class="panel sf-card">
+    <div class="panel sf-card sf-glow">
       <div class="head">
         <div class="mark">
           <div class="markInner"></div>
@@ -76,12 +76,17 @@ async function onSubmit() {
   place-items: center;
   position: relative;
   overflow: hidden;
+  background: radial-gradient(circle at 20% 10%, rgba(47, 107, 255, 0.12), transparent 55%),
+    radial-gradient(circle at 80% 0%, rgba(39, 183, 167, 0.12), transparent 50%),
+    linear-gradient(180deg, #f3f6fb, #eaf0f7);
 }
 
 .panel {
   width: min(420px, calc(100vw - 40px));
-  padding: 18px 18px 16px;
+  padding: 22px 20px 18px;
   z-index: 2;
+  border: 1px solid rgba(15, 42, 74, 0.08);
+  border-radius: 18px;
 }
 
 .head {
@@ -95,10 +100,10 @@ async function onSubmit() {
   width: 42px;
   height: 42px;
   border-radius: 14px;
-  background: radial-gradient(circle at 25% 25%, rgba(61, 214, 198, 0.95), transparent 60%),
-    radial-gradient(circle at 70% 15%, rgba(42, 166, 255, 0.85), transparent 60%),
-    rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: radial-gradient(circle at 25% 25%, rgba(39, 183, 167, 0.95), transparent 60%),
+    radial-gradient(circle at 70% 15%, rgba(47, 107, 255, 0.85), transparent 60%),
+    rgba(47, 107, 255, 0.08);
+  border: 1px solid rgba(47, 107, 255, 0.2);
   position: relative;
 }
 
@@ -106,10 +111,11 @@ async function onSubmit() {
   position: absolute;
   inset: 10px;
   border-radius: 12px;
-  border: 1px dashed rgba(255, 255, 255, 0.2);
+  border: 1px dashed rgba(47, 107, 255, 0.35);
 }
 
 .title {
+  font-family: var(--sf-font-display);
   font-weight: 800;
   letter-spacing: 0.4px;
 }
@@ -127,8 +133,9 @@ async function onSubmit() {
 
 .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(42, 49, 64, 0.82);
 }
+
 
 .bgArt {
   position: absolute;
@@ -149,7 +156,7 @@ async function onSubmit() {
   height: 420px;
   left: -120px;
   top: -120px;
-  background: rgba(61, 214, 198, 0.22);
+  background: rgba(39, 183, 167, 0.2);
 }
 
 .o2 {
@@ -157,7 +164,7 @@ async function onSubmit() {
   height: 520px;
   right: -200px;
   top: -180px;
-  background: rgba(42, 166, 255, 0.18);
+  background: rgba(47, 107, 255, 0.2);
 }
 
 .o3 {
@@ -165,17 +172,16 @@ async function onSubmit() {
   height: 560px;
   left: 40%;
   bottom: -280px;
-  background: rgba(255, 77, 79, 0.12);
+  background: rgba(255, 183, 77, 0.18);
 }
 
 .grid {
   position: absolute;
   inset: 0;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(51, 65, 85, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(51, 65, 85, 0.05) 1px, transparent 1px);
   background-size: 42px 42px;
   mask-image: radial-gradient(circle at 50% 45%, rgba(0, 0, 0, 1) 0%, rgba(0, 0, 0, 0) 70%);
-  opacity: 0.45;
+  opacity: 0.55;
 }
 </style>
-

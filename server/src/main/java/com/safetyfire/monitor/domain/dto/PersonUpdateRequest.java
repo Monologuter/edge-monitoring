@@ -11,7 +11,10 @@ public record PersonUpdateRequest(
         @NotBlank @Size(max = 64) String personName,
         @NotBlank @Size(max = 32) String personType,
         @NotNull @Min(0) @Max(1) Integer isCertified,
-        @Size(max = 32) String phone
+        @Size(max = 32) String phone,
+        Long avatarFileId,
+        Long certFileId,
+        java.time.LocalDate certExpireDate,
+        @Min(0) @Max(1) Integer smsNotify
 ) {
 }
-

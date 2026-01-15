@@ -6,6 +6,8 @@
         <id column="id" property="id"/>
         <result column="company_code" property="companyCode"/>
         <result column="company_name" property="companyName"/>
+        <result column="credit_code" property="creditCode"/>
+        <result column="principal_name" property="principalName"/>
         <result column="business_license" property="businessLicense"/>
         <result column="business_license_file_id" property="businessLicenseFileId"/>
         <result column="business_license_start" property="businessLicenseStart"/>
@@ -14,15 +16,21 @@
         <result column="business_license_issuing_authority" property="businessLicenseIssuingAuthority"/>
         <result column="address" property="address"/>
         <result column="register_address" property="registerAddress"/>
+        <result column="storage_address" property="storageAddress"/>
         <result column="company_status" property="companyStatus"/>
         <result column="dosage" property="dosage"/>
         <result column="reservoir_area" property="reservoirArea"/>
+        <result column="storeroom_area" property="storeroomArea"/>
+        <result column="longitude" property="longitude"/>
+        <result column="latitude" property="latitude"/>
     </resultMap>
 
     <select id="findById" resultMap="CompanyMap">
         SELECT id,
                company_code,
                company_name,
+               credit_code,
+               principal_name,
                business_license,
                business_license_file_id,
                business_license_start,
@@ -31,9 +39,13 @@
                business_license_issuing_authority,
                address,
                register_address,
+               storage_address,
                company_status,
                dosage,
-               reservoir_area
+               reservoir_area,
+               storeroom_area,
+               longitude,
+               latitude
         FROM company
         WHERE id = #{id}
         LIMIT 1
@@ -43,6 +55,8 @@
         SELECT id,
                company_code,
                company_name,
+               credit_code,
+               principal_name,
                business_license,
                business_license_file_id,
                business_license_start,
@@ -51,26 +65,32 @@
                business_license_issuing_authority,
                address,
                register_address,
+               storage_address,
                company_status,
                dosage,
-               reservoir_area
+               reservoir_area,
+               storeroom_area,
+               longitude,
+               latitude
         FROM company
         WHERE company_code = #{companyCode}
         LIMIT 1
     </select>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO company (company_code, company_name, business_license, business_license_file_id, business_license_start, business_license_end,
-                             business_license_scope, business_license_issuing_authority, address, register_address, company_status, dosage, reservoir_area,
-                             created_at, updated_at)
-        VALUES (#{companyCode}, #{companyName}, #{businessLicense}, #{businessLicenseFileId}, #{businessLicenseStart}, #{businessLicenseEnd},
-                #{businessLicenseScope}, #{businessLicenseIssuingAuthority}, #{address}, #{registerAddress}, #{companyStatus}, #{dosage}, #{reservoirArea},
-                NOW(3), NOW(3))
+        INSERT INTO company (company_code, company_name, credit_code, principal_name, business_license, business_license_file_id, business_license_start,
+                             business_license_end, business_license_scope, business_license_issuing_authority, address, register_address, storage_address,
+                             company_status, dosage, reservoir_area, storeroom_area, longitude, latitude, created_at, updated_at)
+        VALUES (#{companyCode}, #{companyName}, #{creditCode}, #{principalName}, #{businessLicense}, #{businessLicenseFileId}, #{businessLicenseStart},
+                #{businessLicenseEnd}, #{businessLicenseScope}, #{businessLicenseIssuingAuthority}, #{address}, #{registerAddress}, #{storageAddress},
+                #{companyStatus}, #{dosage}, #{reservoirArea}, #{storeroomArea}, #{longitude}, #{latitude}, NOW(3), NOW(3))
     </insert>
 
     <update id="update">
         UPDATE company
         SET company_name = #{companyName},
+            credit_code = #{creditCode},
+            principal_name = #{principalName},
             business_license = #{businessLicense},
             business_license_file_id = #{businessLicenseFileId},
             business_license_start = #{businessLicenseStart},
@@ -79,9 +99,13 @@
             business_license_issuing_authority = #{businessLicenseIssuingAuthority},
             address = #{address},
             register_address = #{registerAddress},
+            storage_address = #{storageAddress},
             company_status = #{companyStatus},
             dosage = #{dosage},
             reservoir_area = #{reservoirArea},
+            storeroom_area = #{storeroomArea},
+            longitude = #{longitude},
+            latitude = #{latitude},
             updated_at = NOW(3)
         WHERE id = #{id}
     </update>
@@ -94,6 +118,8 @@
         SELECT id,
                company_code,
                company_name,
+               credit_code,
+               principal_name,
                business_license,
                business_license_file_id,
                business_license_start,
@@ -102,14 +128,19 @@
                business_license_issuing_authority,
                address,
                register_address,
+               storage_address,
                company_status,
                dosage,
-               reservoir_area
+               reservoir_area,
+               storeroom_area,
+               longitude,
+               latitude
         FROM company
         <where>
             <if test="keyword != null and keyword != ''">
                 (company_code LIKE CONCAT('%', #{keyword}, '%')
-                    OR company_name LIKE CONCAT('%', #{keyword}, '%'))
+                    OR company_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR credit_code LIKE CONCAT('%', #{keyword}, '%'))
             </if>
             <if test="companyCodes != null and companyCodes.size() > 0">
                 <if test="keyword != null and keyword != ''">AND</if>
@@ -129,7 +160,8 @@
         <where>
             <if test="keyword != null and keyword != ''">
                 (company_code LIKE CONCAT('%', #{keyword}, '%')
-                    OR company_name LIKE CONCAT('%', #{keyword}, '%'))
+                    OR company_name LIKE CONCAT('%', #{keyword}, '%')
+                    OR credit_code LIKE CONCAT('%', #{keyword}, '%'))
             </if>
             <if test="companyCodes != null and companyCodes.size() > 0">
                 <if test="keyword != null and keyword != ''">AND</if>

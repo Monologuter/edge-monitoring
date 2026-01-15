@@ -8,6 +8,7 @@ import com.safetyfire.monitor.domain.dto.RefreshRequest;
 import com.safetyfire.monitor.domain.vo.TokenVO;
 import com.safetyfire.monitor.domain.vo.UserVO;
 import com.safetyfire.monitor.service.AuthService;
+import com.safetyfire.monitor.service.CaptchaService;
 import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -19,15 +20,22 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/auth")
 public class AuthController {
     private final AuthService authService;
+    private final CaptchaService captchaService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, CaptchaService captchaService) {
         this.authService = authService;
+        this.captchaService = captchaService;
     }
 
     @PostMapping("/login")
     @Audit(action = "auth.login")
     public ApiResponse<TokenVO> login(@Valid @RequestBody LoginRequest req) {
-        return ApiResponse.ok(authService.login(req.username(), req.password()));
+        return ApiResponse.ok(authService.login(req.username(), req.password(), req.captchaId(), req.captchaCode()));
+    }
+
+    @GetMapping("/captcha")
+    public ApiResponse<CaptchaService.CaptchaResult> captcha() {
+        return ApiResponse.ok(captchaService.generate());
     }
 
     @PostMapping("/refresh")

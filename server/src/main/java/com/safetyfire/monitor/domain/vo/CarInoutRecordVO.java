@@ -8,6 +8,7 @@ public record CarInoutRecordVO(
         String companyCode,
         String licensePlateNumber,
         String carType,
+        String driverName,
         String inOutState,
         Long inOutTime,
         Long imageFileId

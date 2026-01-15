@@ -6,6 +6,7 @@ import com.safetyfire.monitor.config.Audit;
 import com.safetyfire.monitor.domain.dto.PersonCreateRequest;
 import com.safetyfire.monitor.domain.dto.PersonUpdateRequest;
 import com.safetyfire.monitor.domain.vo.PersonVO;
+import com.safetyfire.monitor.domain.vo.ImportResultVO;
 import com.safetyfire.monitor.service.PersonService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -13,6 +14,7 @@ import jakarta.validation.constraints.Min;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 人员档案接口（FR-02）。
@@ -44,6 +46,13 @@ public class PersonController {
         return ApiResponse.ok(personService.create(req));
     }
 
+    @PostMapping("/import")
+    @PreAuthorize("hasAuthority('person:manage')")
+    @Audit(action = "person.import")
+    public ApiResponse<ImportResultVO> importCsv(@RequestPart("file") MultipartFile file) {
+        return ApiResponse.ok(personService.importCsv(file));
+    }
+
     @PutMapping
     @PreAuthorize("hasAuthority('person:manage')")
     @Audit(action = "person.update")
@@ -60,4 +69,3 @@ public class PersonController {
         return ApiResponse.ok(null);
     }
 }
-

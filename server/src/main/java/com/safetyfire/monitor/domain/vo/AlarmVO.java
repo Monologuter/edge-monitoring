@@ -11,9 +11,13 @@ public record AlarmVO(
         String workflowStatus,
         String riskLevel,
         String deviceCode,
+        String alarmFile,
+        String storeNum,
+        String storeroomNum,
         Long warningTime,
         Long clearTime,
         Long archivedTime,
+        Long handledTime,
         String handler,
         String remark
 ) {

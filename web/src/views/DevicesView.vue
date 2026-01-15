@@ -1,21 +1,43 @@
 <template>
-  <div>
-    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px">
-      <h2 class="sf-title">设备管理</h2>
-      <div style="display: flex; gap: 10px; align-items: center">
+  <div class="sf-page">
+    <div class="sf-page-head">
+      <div>
+        <h2 class="sf-page-title">设备管理</h2>
+        <div class="sf-page-sub">设备档案、阈值与在线状态</div>
+      </div>
+      <div class="sf-page-actions">
+        <el-select v-model="deviceTypeFilter" placeholder="设备类型" style="width: 160px" clearable>
+          <el-option v-for="t in deviceTypeOptions" :key="t.value" :label="t.label" :value="t.value" />
+        </el-select>
         <el-button type="primary" @click="openCreate">新增设备</el-button>
         <el-button @click="load">刷新</el-button>
       </div>
     </div>
 
-    <el-table :data="list" style="width: 100%" v-loading="loading">
+    <div class="sf-card sf-table-card">
+      <el-table :data="list" style="width: 100%" v-loading="loading">
       <el-table-column prop="companyCode" label="企业编码" min-width="140" />
       <el-table-column prop="deviceCode" label="编码" min-width="140" />
       <el-table-column prop="deviceName" label="名称" min-width="180" />
-      <el-table-column prop="deviceType" label="类型" width="90" />
+      <el-table-column prop="deviceType" label="类型" width="110">
+        <template #default="{ row }">
+          <span class="sf-chip">{{ deviceTypeLabel(row.deviceType) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="locationName" label="位置" min-width="160" />
       <el-table-column prop="storeNum" label="仓库编码" min-width="140" />
       <el-table-column prop="storeroomNum" label="库房编码" min-width="140" />
+      <el-table-column prop="ipAddress" label="IP地址" min-width="140" />
+      <el-table-column prop="accessUsername" label="账号" width="120">
+        <template #default="{ row }">
+          <span class="sf-muted">{{ row.accessUsername ? "••••••" : "-" }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="accessPassword" label="密码" width="120">
+        <template #default="{ row }">
+          <span class="sf-muted">{{ row.accessPassword ? "••••••" : "-" }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="阈值" min-width="160">
         <template #default="{ row }">
           <span class="sf-muted">{{ row.lowerLimit ?? "-" }}</span>
@@ -40,36 +62,44 @@
           <el-button size="small" type="danger" plain @click="onDelete(row.id)">删除</el-button>
         </template>
       </el-table-column>
-    </el-table>
+      </el-table>
 
-    <div style="display: flex; justify-content: flex-end; margin-top: 12px">
-      <el-pagination
-        background
-        layout="prev, pager, next, sizes, total"
-        :total="total"
-        v-model:current-page="page"
-        v-model:page-size="pageSize"
-        @change="load"
-      />
+      <div style="display: flex; justify-content: flex-end; margin-top: 12px">
+        <el-pagination
+          background
+          layout="prev, pager, next, sizes, total"
+          :total="total"
+          v-model:current-page="page"
+          v-model:page-size="pageSize"
+          @change="load"
+        />
+      </div>
     </div>
 
     <el-dialog v-model="dialogVisible" :title="editing?.id ? '编辑设备' : '新增设备'" width="720px">
       <el-form label-width="110px">
-        <el-form-item label="企业编码"><el-input v-model="form.companyCode" /></el-form-item>
-        <el-form-item label="设备编码" required><el-input v-model="form.deviceCode" /></el-form-item>
-        <el-form-item label="设备名称" required><el-input v-model="form.deviceName" /></el-form-item>
-        <el-form-item label="设备类型" required>
-          <el-input-number v-model="form.deviceType" style="width: 100%" />
-        </el-form-item>
-        <el-form-item label="单位"><el-input v-model="form.unit" /></el-form-item>
-        <el-form-item label="下限"><el-input-number v-model="form.lowerLimit" style="width: 100%" /></el-form-item>
-        <el-form-item label="上限"><el-input-number v-model="form.upperLimit" style="width: 100%" /></el-form-item>
-        <el-form-item label="位置"><el-input v-model="form.locationName" /></el-form-item>
-        <el-form-item label="仓库编码"><el-input v-model="form.storeNum" /></el-form-item>
-        <el-form-item label="库房编码"><el-input v-model="form.storeroomNum" /></el-form-item>
-        <el-form-item v-if="editing?.id" label="在线状态">
+        <div class="sf-form-grid">
+          <el-form-item label="企业编码"><el-input v-model="form.companyCode" /></el-form-item>
+          <el-form-item label="设备编码" required><el-input v-model="form.deviceCode" /></el-form-item>
+          <el-form-item label="设备名称" required><el-input v-model="form.deviceName" /></el-form-item>
+          <el-form-item label="设备类型" required>
+            <el-select v-model="form.deviceType" style="width: 100%" placeholder="选择类型">
+              <el-option v-for="t in deviceTypeOptions" :key="t.value" :label="t.label" :value="t.value" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="单位"><el-input v-model="form.unit" /></el-form-item>
+          <el-form-item label="下限"><el-input-number v-model="form.lowerLimit" style="width: 100%" /></el-form-item>
+          <el-form-item label="上限"><el-input-number v-model="form.upperLimit" style="width: 100%" /></el-form-item>
+          <el-form-item label="位置"><el-input v-model="form.locationName" /></el-form-item>
+          <el-form-item label="仓库编码"><el-input v-model="form.storeNum" /></el-form-item>
+          <el-form-item label="库房编码"><el-input v-model="form.storeroomNum" /></el-form-item>
+          <el-form-item label="IP地址"><el-input v-model="form.ipAddress" /></el-form-item>
+          <el-form-item label="账号"><el-input v-model="form.accessUsername" /></el-form-item>
+          <el-form-item label="密码"><el-input v-model="form.accessPassword" show-password /></el-form-item>
+          <el-form-item v-if="editing?.id" label="在线状态">
           <el-switch v-model="form.onlineStatus" :active-value="1" :inactive-value="0" />
-        </el-form-item>
+          </el-form-item>
+        </div>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -104,6 +134,9 @@ type DeviceVO = {
   locationName: string | null;
   storeNum: string | null;
   storeroomNum: string | null;
+  ipAddress: string | null;
+  accessUsername: string | null;
+  accessPassword: string | null;
   onlineStatus: number;
 };
 
@@ -114,6 +147,20 @@ const list = ref<DeviceVO[]>([]);
 const total = ref(0);
 const page = ref(1);
 const pageSize = ref(20);
+const deviceTypeFilter = ref<number | null>(null);
+
+const deviceTypeOptions = [
+  { label: "视频", value: 1 },
+  { label: "红外", value: 2 },
+  { label: "温度", value: 3 },
+  { label: "湿度", value: 4 },
+  { label: "液位", value: 5 }
+];
+
+function deviceTypeLabel(value?: number | null) {
+  const found = deviceTypeOptions.find((item) => item.value === value);
+  return found ? found.label : "未知";
+}
 
 const dialogVisible = ref(false);
 const saving = ref(false);
@@ -129,6 +176,9 @@ const form = reactive({
   locationName: "",
   storeNum: "",
   storeroomNum: "",
+  ipAddress: "",
+  accessUsername: "",
+  accessPassword: "",
   onlineStatus: 0
 });
 
@@ -139,7 +189,9 @@ let chart: echarts.ECharts | null = null;
 async function load() {
   loading.value = true;
   try {
-    const data = await http.get<PageResponse<DeviceVO>>(`/api/v1/devices?page=${page.value}&pageSize=${pageSize.value}`);
+    const data = await http.get<PageResponse<DeviceVO>>(
+      `/api/v1/devices?page=${page.value}&pageSize=${pageSize.value}${deviceTypeFilter.value ? `&deviceType=${deviceTypeFilter.value}` : ""}`
+    );
     list.value = data.list;
     total.value = data.total;
   } catch (e: any) {
@@ -162,6 +214,9 @@ function openCreate() {
     locationName: "",
     storeNum: "",
     storeroomNum: "",
+    ipAddress: "",
+    accessUsername: "",
+    accessPassword: "",
     onlineStatus: 0
   });
   dialogVisible.value = true;
@@ -180,6 +235,9 @@ function openEdit(row: DeviceVO) {
     locationName: row.locationName || "",
     storeNum: row.storeNum || "",
     storeroomNum: row.storeroomNum || "",
+    ipAddress: row.ipAddress || "",
+    accessUsername: row.accessUsername || "",
+    accessPassword: row.accessPassword || "",
     onlineStatus: row.onlineStatus
   });
   dialogVisible.value = true;
@@ -260,5 +318,9 @@ async function openTrend(deviceCode: string) {
 }
 
 watch([page, pageSize], () => load());
+watch(deviceTypeFilter, () => {
+  page.value = 1;
+  load();
+});
 load();
 </script>

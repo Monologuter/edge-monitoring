@@ -17,7 +17,9 @@ public record DeviceCreateRequest(
         Double upperLimit,
         @Size(max = 128) String locationName,
         @Size(max = 64) String storeNum,
-        @Size(max = 64) String storeroomNum
+        @Size(max = 64) String storeroomNum,
+        @Size(max = 64) String ipAddress,
+        @Size(max = 64) String accessUsername,
+        @Size(max = 128) String accessPassword
 ) {
 }
-

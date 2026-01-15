@@ -1,19 +1,25 @@
 <template>
-  <div>
-    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px">
-      <h2 class="sf-title">视频接入</h2>
-      <div style="display: flex; gap: 10px; align-items: center">
+  <div class="sf-page">
+    <div class="sf-page-head">
+      <div>
+        <h2 class="sf-page-title">视频接入</h2>
+        <div class="sf-page-sub">摄像头接入与流地址管理</div>
+      </div>
+      <div class="sf-page-actions">
         <el-input v-model="keyword" placeholder="编码/名称/企业编码" style="width: 240px" clearable />
         <el-button type="primary" @click="openCreate">新增摄像头</el-button>
         <el-button @click="load">刷新</el-button>
       </div>
     </div>
 
-    <el-table :data="list" v-loading="loading" style="width: 100%">
+    <div class="sf-card sf-table-card">
+      <el-table :data="list" v-loading="loading" style="width: 100%">
       <el-table-column prop="cameraCode" label="编码" min-width="140" />
       <el-table-column prop="cameraName" label="名称" min-width="180" />
       <el-table-column prop="companyCode" label="企业编码" min-width="140" />
       <el-table-column prop="locationName" label="位置" min-width="160" />
+      <el-table-column prop="storeNum" label="仓库编码" min-width="140" />
+      <el-table-column prop="storeroomNum" label="库房编码" min-width="140" />
       <el-table-column prop="streamUrl" label="流地址" min-width="260" />
       <el-table-column prop="enabled" label="启用" width="90">
         <template #default="{ row }">
@@ -28,29 +34,32 @@
           <el-button size="small" type="danger" plain @click="onDelete(row.id)">删除</el-button>
         </template>
       </el-table-column>
-    </el-table>
+      </el-table>
 
-    <div style="display: flex; justify-content: flex-end; margin-top: 12px">
-      <el-pagination
-        background
-        layout="prev, pager, next, sizes, total"
-        :total="total"
-        v-model:current-page="page"
-        v-model:page-size="pageSize"
-        @change="load"
-      />
+      <div style="display: flex; justify-content: flex-end; margin-top: 12px">
+        <el-pagination
+          background
+          layout="prev, pager, next, sizes, total"
+          :total="total"
+          v-model:current-page="page"
+          v-model:page-size="pageSize"
+          @change="load"
+        />
+      </div>
     </div>
 
     <el-dialog v-model="dialogVisible" :title="editing?.id ? '编辑摄像头' : '新增摄像头'" width="720px">
       <el-form label-width="100px">
-        <el-form-item label="企业编码"><el-input v-model="form.companyCode" /></el-form-item>
-        <el-form-item label="摄像头编码" required><el-input v-model="form.cameraCode" /></el-form-item>
-        <el-form-item label="摄像头名称" required><el-input v-model="form.cameraName" /></el-form-item>
-        <el-form-item label="流地址" required><el-input v-model="form.streamUrl" /></el-form-item>
-        <el-form-item label="位置"><el-input v-model="form.locationName" /></el-form-item>
-        <el-form-item label="仓库编码"><el-input v-model="form.storeNum" /></el-form-item>
-        <el-form-item label="库房编码"><el-input v-model="form.storeroomNum" /></el-form-item>
-        <el-form-item label="启用"><el-switch v-model="form.enabled" :active-value="1" :inactive-value="0" /></el-form-item>
+        <div class="sf-form-grid">
+          <el-form-item label="企业编码"><el-input v-model="form.companyCode" /></el-form-item>
+          <el-form-item label="摄像头编码" required><el-input v-model="form.cameraCode" /></el-form-item>
+          <el-form-item label="摄像头名称" required><el-input v-model="form.cameraName" /></el-form-item>
+          <el-form-item label="流地址" required class="sf-form-full"><el-input v-model="form.streamUrl" /></el-form-item>
+          <el-form-item label="位置"><el-input v-model="form.locationName" /></el-form-item>
+          <el-form-item label="仓库编码"><el-input v-model="form.storeNum" /></el-form-item>
+          <el-form-item label="库房编码"><el-input v-model="form.storeroomNum" /></el-form-item>
+          <el-form-item label="启用"><el-switch v-model="form.enabled" :active-value="1" :inactive-value="0" /></el-form-item>
+        </div>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -177,4 +186,3 @@ watch(keyword, () => {
 });
 load();
 </script>
-

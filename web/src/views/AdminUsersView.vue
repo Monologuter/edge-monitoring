@@ -1,15 +1,19 @@
 <template>
-  <div>
-    <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px">
-      <h2 class="sf-title">用户管理</h2>
-      <div style="display: flex; gap: 10px; align-items: center">
+  <div class="sf-page">
+    <div class="sf-page-head">
+      <div>
+        <h2 class="sf-page-title">用户管理</h2>
+        <div class="sf-page-sub">系统账号、角色与数据范围</div>
+      </div>
+      <div class="sf-page-actions">
         <el-input v-model="keyword" placeholder="用户名/显示名" style="width: 220px" clearable />
         <el-button type="primary" @click="openCreate">新增用户</el-button>
         <el-button @click="load">刷新</el-button>
       </div>
     </div>
 
-    <el-table :data="list" v-loading="loading" style="width: 100%">
+    <div class="sf-card sf-table-card">
+      <el-table :data="list" v-loading="loading" style="width: 100%">
       <el-table-column prop="id" label="ID" width="90" />
       <el-table-column prop="username" label="用户名" width="140" />
       <el-table-column prop="displayName" label="显示名" min-width="160" />
@@ -38,46 +42,49 @@
           <el-button size="small" type="danger" plain :disabled="row.username === 'admin'" @click="onDelete(row.id)">删除</el-button>
         </template>
       </el-table-column>
-    </el-table>
+      </el-table>
 
-    <div style="display: flex; justify-content: flex-end; margin-top: 12px">
-      <el-pagination
-        background
-        layout="prev, pager, next, sizes, total"
-        :total="total"
-        v-model:current-page="page"
-        v-model:page-size="pageSize"
-        @change="load"
-      />
+      <div style="display: flex; justify-content: flex-end; margin-top: 12px">
+        <el-pagination
+          background
+          layout="prev, pager, next, sizes, total"
+          :total="total"
+          v-model:current-page="page"
+          v-model:page-size="pageSize"
+          @change="load"
+        />
+      </div>
     </div>
 
     <el-dialog v-model="dialogVisible" :title="editing?.id ? '编辑用户' : '新增用户'" width="720px">
       <el-form label-width="110px">
-        <el-form-item label="用户名" required>
+        <div class="sf-form-grid">
+          <el-form-item label="用户名" required>
           <el-input v-model="form.username" :disabled="Boolean(editing?.id)" />
-        </el-form-item>
-        <el-form-item label="显示名" required>
+          </el-form-item>
+          <el-form-item label="显示名" required>
           <el-input v-model="form.displayName" />
-        </el-form-item>
-        <el-form-item v-if="!editing?.id" label="初始密码" required>
+          </el-form-item>
+          <el-form-item v-if="!editing?.id" label="初始密码" required class="sf-form-full">
           <el-input v-model="form.password" type="password" show-password placeholder="如 Operator@123456" />
-        </el-form-item>
-        <el-form-item label="启用">
+          </el-form-item>
+          <el-form-item label="启用">
           <el-switch v-model="form.enabled" :active-value="1" :inactive-value="0" />
-        </el-form-item>
-        <el-form-item label="角色">
+          </el-form-item>
+          <el-form-item label="角色" class="sf-form-full">
           <el-select v-model="form.roleKeys" multiple filterable style="width: 100%" placeholder="选择角色">
             <el-option v-for="r in roleOptions" :key="r.roleKey" :label="`${r.roleName} (${r.roleKey})`" :value="r.roleKey" />
           </el-select>
-        </el-form-item>
-        <el-form-item label="数据范围(企业)">
+          </el-form-item>
+          <el-form-item label="数据范围(企业)" class="sf-form-full">
           <el-select v-model="form.companyCodes" multiple filterable style="width: 100%" placeholder="选择企业（非 ADMIN 必填）">
             <el-option v-for="c in companyOptions" :key="c.companyCode" :label="`${c.companyName} (${c.companyCode})`" :value="c.companyCode" />
           </el-select>
           <div class="sf-muted" style="margin-top: 6px; font-size: 12px">
             ADMIN 角色默认全量；其他角色按这里选择的企业编码做数据隔离。
           </div>
-        </el-form-item>
+          </el-form-item>
+        </div>
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
@@ -232,4 +239,3 @@ watch(keyword, () => {
 
 loadMeta().then(load);
 </script>
-

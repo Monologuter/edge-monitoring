@@ -3,6 +3,7 @@ package com.safetyfire.monitor.service;
 import cn.hutool.core.lang.UUID;
 import com.safetyfire.monitor.common.BizException;
 import com.safetyfire.monitor.common.ErrorCode;
+import com.safetyfire.monitor.config.AuthProperties;
 import com.safetyfire.monitor.domain.entity.UserEntity;
 import com.safetyfire.monitor.domain.dto.ChangePasswordRequest;
 import com.safetyfire.monitor.domain.vo.TokenVO;
@@ -35,10 +36,13 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final StringRedisTemplate redisTemplate;
+    private final CaptchaService captchaService;
+    private final AuthProperties authProperties;
 
     public AuthService(UserMapper userMapper, PermissionMapper permissionMapper, MenuMapper menuMapper,
                        UserCompanyScopeMapper userCompanyScopeMapper,
-                       PasswordEncoder passwordEncoder, JwtService jwtService, StringRedisTemplate redisTemplate) {
+                       PasswordEncoder passwordEncoder, JwtService jwtService, StringRedisTemplate redisTemplate,
+                       CaptchaService captchaService, AuthProperties authProperties) {
         this.userMapper = userMapper;
         this.permissionMapper = permissionMapper;
         this.menuMapper = menuMapper;
@@ -46,9 +50,17 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.redisTemplate = redisTemplate;
+        this.captchaService = captchaService;
+        this.authProperties = authProperties;
     }
 
-    public TokenVO login(String username, String password) {
+    public TokenVO login(String username, String password, String captchaId, String captchaCode) {
+        if (authProperties.isCaptchaEnabled()) {
+            boolean ok = captchaService.validate(captchaId, captchaCode);
+            if (!ok) {
+                throw new BizException(ErrorCode.PARAM_INVALID, "验证码错误或已过期");
+            }
+        }
         UserEntity user = userMapper.findByUsername(username);
         if (user == null || user.getEnabled() == null || user.getEnabled() != 1) {
             throw new BizException(ErrorCode.LOGIN_FAILED, "账号或密码错误");

@@ -11,9 +11,13 @@ public class AlarmEntity {
     private String workflowStatus;
     private String riskLevel;
     private String deviceCode;
+    private String alarmFile;
+    private String storeNum;
+    private String storeroomNum;
     private Long warningTime;
     private Long clearTime;
     private Long archivedTime;
+    private Long handledTime;
     private String handler;
     private String remark;
 
@@ -73,6 +77,30 @@ public class AlarmEntity {
         this.deviceCode = deviceCode;
     }
 
+    public String getAlarmFile() {
+        return alarmFile;
+    }
+
+    public void setAlarmFile(String alarmFile) {
+        this.alarmFile = alarmFile;
+    }
+
+    public String getStoreNum() {
+        return storeNum;
+    }
+
+    public void setStoreNum(String storeNum) {
+        this.storeNum = storeNum;
+    }
+
+    public String getStoreroomNum() {
+        return storeroomNum;
+    }
+
+    public void setStoreroomNum(String storeroomNum) {
+        this.storeroomNum = storeroomNum;
+    }
+
     public Long getWarningTime() {
         return warningTime;
     }
@@ -95,6 +123,14 @@ public class AlarmEntity {
 
     public void setArchivedTime(Long archivedTime) {
         this.archivedTime = archivedTime;
+    }
+
+    public Long getHandledTime() {
+        return handledTime;
+    }
+
+    public void setHandledTime(Long handledTime) {
+        this.handledTime = handledTime;
     }
 
     public String getHandler() {

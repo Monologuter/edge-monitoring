@@ -18,6 +18,30 @@
         VALUES (#{companyCode}, #{idcard}, #{personName}, #{personType}, #{inOutState}, #{inOutTime}, #{imageFileId}, NOW(3), NOW(3))
     </insert>
 
+    <select id="findById" resultMap="PersonInoutMap">
+        SELECT id, company_code, idcard, person_name, person_type, in_out_state, in_out_time, image_file_id
+        FROM person_inout_record
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <update id="update">
+        UPDATE person_inout_record
+        SET company_code = #{companyCode},
+            idcard = #{idcard},
+            person_name = #{personName},
+            person_type = #{personType},
+            in_out_state = #{inOutState},
+            in_out_time = #{inOutTime},
+            image_file_id = #{imageFileId},
+            updated_at = NOW(3)
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM person_inout_record WHERE id = #{id}
+    </delete>
+
     <select id="listByCompanyCodes" resultMap="PersonInoutMap">
         SELECT id, company_code, idcard, person_name, person_type, in_out_state, in_out_time, image_file_id
         FROM person_inout_record
@@ -44,6 +68,57 @@
                 </foreach>
             </if>
         </where>
+    </select>
+
+    <select id="countLatestIn" resultType="long">
+        SELECT COUNT(1)
+        FROM person_inout_record p
+                 INNER JOIN (
+                     SELECT idcard, MAX(in_out_time) AS max_time
+                     FROM person_inout_record
+                     <where>
+                         <if test="companyCodes != null and companyCodes.size() > 0">
+                             company_code IN
+                             <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                                 #{c}
+                             </foreach>
+                         </if>
+                     </where>
+                     GROUP BY idcard
+                 ) t ON p.idcard = t.idcard AND p.in_out_time = t.max_time
+        WHERE p.in_out_state = 'IN'
+        <if test="companyCodes != null and companyCodes.size() > 0">
+            AND p.company_code IN
+            <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                #{c}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="countTodayIn" resultType="long">
+        SELECT COUNT(1)
+        FROM person_inout_record
+        WHERE in_out_state = 'IN'
+          AND in_out_time BETWEEN #{startTime} AND #{endTime}
+        <if test="companyCodes != null and companyCodes.size() > 0">
+            AND company_code IN
+            <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                #{c}
+            </foreach>
+        </if>
+    </select>
+
+    <select id="countTodayOut" resultType="long">
+        SELECT COUNT(1)
+        FROM person_inout_record
+        WHERE in_out_state = 'OUT'
+          AND in_out_time BETWEEN #{startTime} AND #{endTime}
+        <if test="companyCodes != null and companyCodes.size() > 0">
+            AND company_code IN
+            <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                #{c}
+            </foreach>
+        </if>
     </select>
 
 </mapper>

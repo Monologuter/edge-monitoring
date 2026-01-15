@@ -21,9 +21,15 @@ public interface DeviceMapper {
 
     int deleteById(@Param("id") Long id);
 
-    List<DeviceEntity> list(@Param("companyCodes") List<String> companyCodes, @Param("offset") int offset, @Param("pageSize") int pageSize);
+    List<DeviceEntity> list(@Param("companyCodes") List<String> companyCodes,
+                            @Param("offset") int offset, @Param("pageSize") int pageSize,
+                            @Param("deviceType") Integer deviceType);
 
-    long countAll(@Param("companyCodes") List<String> companyCodes);
+    long countAll(@Param("companyCodes") List<String> companyCodes, @Param("deviceType") Integer deviceType);
+
+    default long countAll(@Param("companyCodes") List<String> companyCodes) {
+        return countAll(companyCodes, null);
+    }
 
     long countOnline(@Param("companyCodes") List<String> companyCodes);
 

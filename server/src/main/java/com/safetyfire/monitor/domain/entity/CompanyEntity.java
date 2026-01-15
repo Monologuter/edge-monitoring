@@ -9,6 +9,8 @@ public class CompanyEntity {
     private Long id;
     private String companyCode;
     private String companyName;
+    private String creditCode;
+    private String principalName;
     private String businessLicense;
     private Long businessLicenseFileId;
     private LocalDate businessLicenseStart;
@@ -17,9 +19,13 @@ public class CompanyEntity {
     private String businessLicenseIssuingAuthority;
     private String address;
     private String registerAddress;
+    private String storageAddress;
     private String companyStatus;
     private Double dosage;
     private Double reservoirArea;
+    private Double storeroomArea;
+    private Double longitude;
+    private Double latitude;
 
     public Long getId() {
         return id;
@@ -43,6 +49,22 @@ public class CompanyEntity {
 
     public void setCompanyName(String companyName) {
         this.companyName = companyName;
+    }
+
+    public String getCreditCode() {
+        return creditCode;
+    }
+
+    public void setCreditCode(String creditCode) {
+        this.creditCode = creditCode;
+    }
+
+    public String getPrincipalName() {
+        return principalName;
+    }
+
+    public void setPrincipalName(String principalName) {
+        this.principalName = principalName;
     }
 
     public String getBusinessLicense() {
@@ -109,6 +131,14 @@ public class CompanyEntity {
         this.registerAddress = registerAddress;
     }
 
+    public String getStorageAddress() {
+        return storageAddress;
+    }
+
+    public void setStorageAddress(String storageAddress) {
+        this.storageAddress = storageAddress;
+    }
+
     public String getCompanyStatus() {
         return companyStatus;
     }
@@ -132,5 +162,28 @@ public class CompanyEntity {
     public void setReservoirArea(Double reservoirArea) {
         this.reservoirArea = reservoirArea;
     }
-}
 
+    public Double getStoreroomArea() {
+        return storeroomArea;
+    }
+
+    public void setStoreroomArea(Double storeroomArea) {
+        this.storeroomArea = storeroomArea;
+    }
+
+    public Double getLongitude() {
+        return longitude;
+    }
+
+    public void setLongitude(Double longitude) {
+        this.longitude = longitude;
+    }
+
+    public Double getLatitude() {
+        return latitude;
+    }
+
+    public void setLatitude(Double latitude) {
+        this.latitude = latitude;
+    }
+}

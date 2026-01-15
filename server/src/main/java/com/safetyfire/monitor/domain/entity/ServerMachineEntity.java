@@ -9,6 +9,8 @@ public class ServerMachineEntity {
     private String computerName;
     private String ip;
     private String originalId;
+    private Long lastHeartbeatTime;
+    private java.time.LocalDateTime createdAt;
 
     public Long getId() {
         return id;
@@ -49,5 +51,20 @@ public class ServerMachineEntity {
     public void setOriginalId(String originalId) {
         this.originalId = originalId;
     }
-}
 
+    public Long getLastHeartbeatTime() {
+        return lastHeartbeatTime;
+    }
+
+    public void setLastHeartbeatTime(Long lastHeartbeatTime) {
+        this.lastHeartbeatTime = lastHeartbeatTime;
+    }
+
+    public java.time.LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(java.time.LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+}

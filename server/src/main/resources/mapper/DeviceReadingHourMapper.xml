@@ -17,5 +17,21 @@
             updated_at = NOW(3)
     </insert>
 
-</mapper>
+    <select id="findLatestValueByDeviceType" resultType="double">
+        SELECT dr.avg_value
+        FROM device_reading_hour dr
+                 INNER JOIN device d ON d.device_code = dr.device_code
+        <where>
+            d.device_type = #{deviceType}
+            <if test="companyCodes != null and companyCodes.size() > 0">
+                AND d.company_code IN
+                <foreach collection="companyCodes" item="c" open="(" separator="," close=")">
+                    #{c}
+                </foreach>
+            </if>
+        </where>
+        ORDER BY dr.hour_start DESC
+        LIMIT 1
+    </select>
 
+</mapper>
