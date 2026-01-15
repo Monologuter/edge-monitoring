@@ -45,10 +45,19 @@ app:
     storage-type: LOCAL
     local-dir: "./.data/uploads"
   provincial:
+    # 从省厅拉取预警（原有功能）
     enabled: false
     base-url: "http://localhost:9999"
     warning-page-path: "/fws/rec/ew/com-page"
     feedback-path: "/fws/rec/ew/feedback"
+    # 向省厅上报数据（新功能）
+    report:
+      enabled: true
+      base-url: "https://220.163.82.253:5321"
+      username: "53090200003"
+      password: "uq,w9CcS1FYwT#8_"
+      aes-key: "K5znJYEe+PzHKgBPgmj3zg=="
+      aes-iv: "XsQrfnKhHcwaxPIKAqK3Qw=="
   mqtt:
     # 统一协议后禁用 MQTT
     enabled: false
