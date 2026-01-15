@@ -35,7 +35,6 @@ yarn-error.log*
 *~
 
 # Hardware interface files
-硬件接口/
 
 # Java build output
 server/target/
