@@ -94,15 +94,21 @@ debugger; /* PartiallyEnd: #3632/scriptSetup.vue */
 const __VLS_ctx = {};
 let __VLS_components;
 let __VLS_directives;
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page-head" },
+});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
-__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ style: {} },
-});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.h2, __VLS_intrinsicElements.h2)({
-    ...{ class: "sf-title" },
+    ...{ class: "sf-page-title" },
 });
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ style: {} },
+    ...{ class: "sf-page-sub" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page-actions" },
 });
 const __VLS_0 = {}.ElButton;
 /** @type {[typeof __VLS_components.ElButton, typeof __VLS_components.elButton, typeof __VLS_components.ElButton, typeof __VLS_components.elButton, ]} */ ;
@@ -140,6 +146,9 @@ const __VLS_15 = {
 };
 __VLS_11.slots.default;
 var __VLS_11;
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-card sf-table-card" },
+});
 const __VLS_16 = {}.ElTabs;
 /** @type {[typeof __VLS_components.ElTabs, typeof __VLS_components.elTabs, typeof __VLS_components.ElTabs, typeof __VLS_components.elTabs, ]} */ ;
 // @ts-ignore
@@ -449,6 +458,9 @@ const __VLS_106 = __VLS_105({
     labelWidth: "90px",
 }, ...__VLS_functionalComponentArgsRest(__VLS_105));
 __VLS_107.slots.default;
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-form-grid" },
+});
 const __VLS_108 = {}.ElFormItem;
 /** @type {[typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, ]} */ ;
 // @ts-ignore
@@ -477,10 +489,12 @@ const __VLS_116 = {}.ElFormItem;
 const __VLS_117 = __VLS_asFunctionalComponent(__VLS_116, new __VLS_116({
     label: "反馈内容",
     required: true,
+    ...{ class: "sf-form-full" },
 }));
 const __VLS_118 = __VLS_117({
     label: "反馈内容",
     required: true,
+    ...{ class: "sf-form-full" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_117));
 __VLS_119.slots.default;
 const __VLS_120 = {}.ElInput;
@@ -592,7 +606,15 @@ const __VLS_146 = __VLS_145({
     var __VLS_151;
 }
 var __VLS_143;
-/** @type {__VLS_StyleScopedClasses['sf-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-head']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-sub']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-actions']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-table-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-form-grid']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-form-full']} */ ;
 var __VLS_dollars;
 const __VLS_self = (await import('vue')).defineComponent({
     setup() {

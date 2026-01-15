@@ -1,0 +1,3 @@
+https://support.dahuatech.com/sdkindex/sdkExploit
+
+IPv4;IPv6;HTTP;TCP;UDP;ARP;RTP;RTSP;RTCP;RTMP;SMTP;FTP;SFTP;DHCP;DNS;DDNS;QoS;UPnP;NTP;Multicast;ICMP;IGMP;NFS;SAMBA;PPPoE;SNMP

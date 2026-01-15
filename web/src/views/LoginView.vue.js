@@ -1,4 +1,4 @@
-import { reactive } from "vue";
+import { reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import { useAuthStore } from "@/store/auth";
 import router from "@/router";
@@ -36,7 +36,7 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.d
     ...{ class: "wrap" },
 });
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ class: "panel sf-card" },
+    ...{ class: "panel sf-card sf-glow" },
 });
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
     ...{ class: "head" },
@@ -170,6 +170,7 @@ __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.d
 /** @type {__VLS_StyleScopedClasses['wrap']} */ ;
 /** @type {__VLS_StyleScopedClasses['panel']} */ ;
 /** @type {__VLS_StyleScopedClasses['sf-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-glow']} */ ;
 /** @type {__VLS_StyleScopedClasses['head']} */ ;
 /** @type {__VLS_StyleScopedClasses['mark']} */ ;
 /** @type {__VLS_StyleScopedClasses['markInner']} */ ;

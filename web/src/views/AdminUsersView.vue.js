@@ -125,15 +125,21 @@ debugger; /* PartiallyEnd: #3632/scriptSetup.vue */
 const __VLS_ctx = {};
 let __VLS_components;
 let __VLS_directives;
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page-head" },
+});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
-__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ style: {} },
-});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.h2, __VLS_intrinsicElements.h2)({
-    ...{ class: "sf-title" },
+    ...{ class: "sf-page-title" },
 });
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ style: {} },
+    ...{ class: "sf-page-sub" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page-actions" },
 });
 const __VLS_0 = {}.ElInput;
 /** @type {[typeof __VLS_components.ElInput, typeof __VLS_components.elInput, ]} */ ;
@@ -186,6 +192,9 @@ const __VLS_19 = {
 };
 __VLS_15.slots.default;
 var __VLS_15;
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-card sf-table-card" },
+});
 const __VLS_20 = {}.ElTable;
 /** @type {[typeof __VLS_components.ElTable, typeof __VLS_components.elTable, typeof __VLS_components.ElTable, typeof __VLS_components.elTable, ]} */ ;
 // @ts-ignore
@@ -463,6 +472,9 @@ const __VLS_90 = __VLS_89({
     labelWidth: "110px",
 }, ...__VLS_functionalComponentArgsRest(__VLS_89));
 __VLS_91.slots.default;
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-form-grid" },
+});
 const __VLS_92 = {}.ElFormItem;
 /** @type {[typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, ]} */ ;
 // @ts-ignore
@@ -516,10 +528,12 @@ if (!__VLS_ctx.editing?.id) {
     const __VLS_109 = __VLS_asFunctionalComponent(__VLS_108, new __VLS_108({
         label: "初始密码",
         required: true,
+        ...{ class: "sf-form-full" },
     }));
     const __VLS_110 = __VLS_109({
         label: "初始密码",
         required: true,
+        ...{ class: "sf-form-full" },
     }, ...__VLS_functionalComponentArgsRest(__VLS_109));
     __VLS_111.slots.default;
     const __VLS_112 = {}.ElInput;
@@ -568,9 +582,11 @@ const __VLS_124 = {}.ElFormItem;
 // @ts-ignore
 const __VLS_125 = __VLS_asFunctionalComponent(__VLS_124, new __VLS_124({
     label: "角色",
+    ...{ class: "sf-form-full" },
 }));
 const __VLS_126 = __VLS_125({
     label: "角色",
+    ...{ class: "sf-form-full" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_125));
 __VLS_127.slots.default;
 const __VLS_128 = {}.ElSelect;
@@ -613,9 +629,11 @@ const __VLS_136 = {}.ElFormItem;
 // @ts-ignore
 const __VLS_137 = __VLS_asFunctionalComponent(__VLS_136, new __VLS_136({
     label: "数据范围(企业)",
+    ...{ class: "sf-form-full" },
 }));
 const __VLS_138 = __VLS_137({
     label: "数据范围(企业)",
+    ...{ class: "sf-form-full" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_137));
 __VLS_139.slots.default;
 const __VLS_140 = {}.ElSelect;
@@ -702,11 +720,21 @@ var __VLS_91;
     var __VLS_159;
 }
 var __VLS_87;
-/** @type {__VLS_StyleScopedClasses['sf-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-head']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-sub']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-actions']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-table-card']} */ ;
 /** @type {__VLS_StyleScopedClasses['sf-chip']} */ ;
 /** @type {__VLS_StyleScopedClasses['sf-chip']} */ ;
 /** @type {__VLS_StyleScopedClasses['sf-muted']} */ ;
 /** @type {__VLS_StyleScopedClasses['sf-chip']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-form-grid']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-form-full']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-form-full']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-form-full']} */ ;
 /** @type {__VLS_StyleScopedClasses['sf-muted']} */ ;
 var __VLS_dollars;
 const __VLS_self = (await import('vue')).defineComponent({

@@ -363,7 +363,7 @@ async function importStores(file: File) {
     const res = await rawHttp.post("/api/v1/stores/import", fd, {
       headers: { "Content-Type": "multipart/form-data" }
     });
-    ElMessage.success(`导入完成：成功 ${res.successCount} 条，失败 ${res.failCount} 条`);
+    ElMessage.success(`导入完成：成功 ${res.data.successCount} 条，失败 ${res.data.failCount} 条`);
     await loadStores();
   } catch (e: any) {
     ElMessage.error(e?.message || "导入失败");
@@ -378,7 +378,7 @@ async function importStorerooms(file: File) {
     const res = await rawHttp.post("/api/v1/storerooms/import", fd, {
       headers: { "Content-Type": "multipart/form-data" }
     });
-    ElMessage.success(`导入完成：成功 ${res.successCount} 条，失败 ${res.failCount} 条`);
+    ElMessage.success(`导入完成：成功 ${res.data.successCount} 条，失败 ${res.data.failCount} 条`);
     await loadStorerooms();
   } catch (e: any) {
     ElMessage.error(e?.message || "导入失败");

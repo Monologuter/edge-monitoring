@@ -138,7 +138,7 @@
           </el-form-item>
           <el-form-item label="头像照片" class="sf-form-full">
             <div style="display: flex; gap: 10px; align-items: center; width: 100%">
-            <el-upload :show-file-list="false" :before-upload="file => uploadPersonFile(file, 'avatar')" accept=".jpg,.jpeg,image/jpeg">
+            <el-upload :show-file-list="false" :before-upload="(file: File) => uploadPersonFile(file, 'avatar')" accept=".jpg,.jpeg,image/jpeg">
               <el-button>上传</el-button>
             </el-upload>
             <el-link v-if="form.avatarFileId" :href="fileUrl(form.avatarFileId)" target="_blank">已上传</el-link>
@@ -147,7 +147,7 @@
           </el-form-item>
           <el-form-item label="证书附件" class="sf-form-full">
             <div style="display: flex; gap: 10px; align-items: center; width: 100%">
-            <el-upload :show-file-list="false" :before-upload="file => uploadPersonFile(file, 'cert')" accept=".jpg,.jpeg,image/jpeg">
+            <el-upload :show-file-list="false" :before-upload="(file: File) => uploadPersonFile(file, 'cert')" accept=".jpg,.jpeg,image/jpeg">
               <el-button>上传</el-button>
             </el-upload>
             <el-link v-if="form.certFileId" :href="fileUrl(form.certFileId)" target="_blank">已上传</el-link>
@@ -435,7 +435,7 @@ async function importPeople(file: File) {
     const res = await rawHttp.post("/api/v1/people/import", fd, {
       headers: { "Content-Type": "multipart/form-data" }
     });
-    ElMessage.success(`导入完成：成功 ${res.successCount} 条，失败 ${res.failCount} 条`);
+    ElMessage.success(`导入完成：成功 ${res.data.successCount} 条，失败 ${res.data.failCount} 条`);
     await loadPeople();
   } catch (e: any) {
     ElMessage.error(e?.message || "导入失败");

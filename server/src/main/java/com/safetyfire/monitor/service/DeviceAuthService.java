@@ -32,10 +32,15 @@ public class DeviceAuthService {
     }
 
     public void assertValid(HttpServletRequest request, String apiKey, String timestamp, String nonce, String signature) {
-        if (apiKey == null || apiKey.isBlank()) {
+        // 优先从请求头获取，如果没有则从URL参数获取
+        String finalApiKey = apiKey;
+        if (finalApiKey == null || finalApiKey.isBlank()) {
+            finalApiKey = request.getParameter("apiKey");
+        }
+        if (finalApiKey == null || finalApiKey.isBlank()) {
             throw new BizException(ErrorCode.DEVICE_AUTH_FAILED, "设备鉴权失败");
         }
-        DeviceApiKeyEntity key = deviceApiKeyMapper.findByApiKey(apiKey.trim());
+        DeviceApiKeyEntity key = deviceApiKeyMapper.findByApiKey(finalApiKey.trim());
         if (key == null || key.getEnabled() == null || key.getEnabled() != 1) {
             throw new BizException(ErrorCode.DEVICE_AUTH_FAILED, "设备鉴权失败");
         }
@@ -66,34 +71,47 @@ public class DeviceAuthService {
             throw new BizException(ErrorCode.RATE_LIMITED, "请求过于频繁，请稍后重试");
         }
 
-        // 签名校验：timestamp + nonce + bodySha256
-        long ts;
-        try {
-            ts = Long.parseLong(timestamp == null ? "" : timestamp.trim());
-        } catch (Exception e) {
-            throw new BizException(ErrorCode.DEVICE_AUTH_FAILED, "设备鉴权失败");
-        }
-        long now = System.currentTimeMillis();
-        if (Math.abs(now - ts) > 5 * 60_000L) {
-            throw new BizException(ErrorCode.DEVICE_AUTH_FAILED, "设备鉴权失败");
-        }
-        if (nonce == null || nonce.isBlank() || signature == null || signature.isBlank()) {
-            throw new BizException(ErrorCode.DEVICE_AUTH_FAILED, "设备鉴权失败");
-        }
+        // 如果有签名参数，则进行完整签名验证；否则仅验证API Key和IP白名单
+        if (signature != null && !signature.isBlank()) {
+            String finalTimestamp = timestamp;
+            String finalNonce = nonce;
+            if (finalTimestamp == null || finalTimestamp.isBlank()) {
+                finalTimestamp = request.getParameter("timestamp");
+            }
+            if (finalNonce == null || finalNonce.isBlank()) {
+                finalNonce = request.getParameter("nonce");
+            }
 
-        String nonceKey = "nonce:" + key.getApiKey() + ":" + nonce.trim();
-        Boolean first = redisTemplate.opsForValue().setIfAbsent(nonceKey, "1", Duration.ofMinutes(10));
-        if (first == null || !first) {
-            throw new BizException(ErrorCode.DEVICE_AUTH_FAILED, "设备鉴权失败");
-        }
+            // 签名校验：timestamp + nonce + bodySha256
+            long ts;
+            try {
+                ts = Long.parseLong(finalTimestamp == null ? "" : finalTimestamp.trim());
+            } catch (Exception e) {
+                throw new BizException(ErrorCode.DEVICE_AUTH_FAILED, "设备鉴权失败");
+            }
+            long now = System.currentTimeMillis();
+            if (Math.abs(now - ts) > 5 * 60_000L) {
+                throw new BizException(ErrorCode.DEVICE_AUTH_FAILED, "设备鉴权失败");
+            }
+            if (finalNonce == null || finalNonce.isBlank()) {
+                throw new BizException(ErrorCode.DEVICE_AUTH_FAILED, "设备鉴权失败");
+            }
 
-        byte[] body = (byte[]) request.getAttribute(CachedBodyFilter.ATTR_BODY);
-        String bodySha = CryptoUtils.sha256Hex(body == null ? new byte[0] : body);
-        String canonical = canonical(key.getApiKey(), ts, nonce.trim(), bodySha);
-        String expected = CryptoUtils.hmacSha256Hex(key.getApiSecret() == null ? "" : key.getApiSecret(), canonical);
-        if (!expected.equalsIgnoreCase(signature.trim())) {
-            throw new BizException(ErrorCode.DEVICE_AUTH_FAILED, "设备鉴权失败");
+            String nonceKey = "nonce:" + key.getApiKey() + ":" + finalNonce.trim();
+            Boolean first = redisTemplate.opsForValue().setIfAbsent(nonceKey, "1", Duration.ofMinutes(10));
+            if (first == null || !first) {
+                throw new BizException(ErrorCode.DEVICE_AUTH_FAILED, "设备鉴权失败");
+            }
+
+            byte[] body = (byte[]) request.getAttribute(CachedBodyFilter.ATTR_BODY);
+            String bodySha = CryptoUtils.sha256Hex(body == null ? new byte[0] : body);
+            String canonical = canonical(key.getApiKey(), ts, finalNonce.trim(), bodySha);
+            String expected = CryptoUtils.hmacSha256Hex(key.getApiSecret() == null ? "" : key.getApiSecret(), canonical);
+            if (!expected.equalsIgnoreCase(signature.trim())) {
+                throw new BizException(ErrorCode.DEVICE_AUTH_FAILED, "设备鉴权失败");
+            }
         }
+        // 无签名参数时，仅验证API Key、IP白名单和限流（简化模式，适用于不支持签名的设备）
     }
 
     /**

@@ -23,6 +23,7 @@ import ScreenView from "@/views/ScreenView.vue";
 import AdminUsersView from "@/views/AdminUsersView.vue";
 import AdminRolesView from "@/views/AdminRolesView.vue";
 import HardwareIngestView from "@/views/HardwareIngestView.vue";
+import DeviceApiKeysView from "@/views/DeviceApiKeysView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -52,6 +53,7 @@ const router = createRouter({
         { path: "audit", name: "audit", component: AuditView },
         { path: "screen", name: "screen", component: ScreenView },
         { path: "hardware/ingest", name: "hardwareIngest", component: HardwareIngestView },
+        { path: "hardware/api-keys", name: "deviceApiKeys", component: DeviceApiKeysView },
         { path: "admin/users", name: "adminUsers", component: AdminUsersView },
         { path: "admin/roles", name: "adminRoles", component: AdminRolesView }
       ]

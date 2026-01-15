@@ -1,4 +1,4 @@
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import { http } from "@/api/http";
 const loading = ref(false);
@@ -6,6 +6,13 @@ const list = ref([]);
 const total = ref(0);
 const page = ref(1);
 const pageSize = ref(20);
+const errorCount = computed(() => list.value.filter((item) => (item.responseCode ?? 0) >= 400).length);
+const avgCost = computed(() => {
+    if (!list.value.length)
+        return 0;
+    const sum = list.value.reduce((acc, cur) => acc + (cur.costMs || 0), 0);
+    return Math.round(sum / list.value.length);
+});
 async function load() {
     loading.value = true;
     try {
@@ -26,12 +33,21 @@ debugger; /* PartiallyEnd: #3632/scriptSetup.vue */
 const __VLS_ctx = {};
 let __VLS_components;
 let __VLS_directives;
-__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ style: {} },
+    ...{ class: "sf-page" },
 });
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page-head" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.h2, __VLS_intrinsicElements.h2)({
-    ...{ class: "sf-title" },
+    ...{ class: "sf-page-title" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page-sub" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page-actions" },
 });
 const __VLS_0 = {}.ElButton;
 /** @type {[typeof __VLS_components.ElButton, typeof __VLS_components.elButton, typeof __VLS_components.ElButton, typeof __VLS_components.elButton, ]} */ ;
@@ -50,6 +66,58 @@ const __VLS_7 = {
 };
 __VLS_3.slots.default;
 var __VLS_3;
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-kpi sf-stagger" },
+    ...{ style: {} },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-card sf-kpi-item" },
+    ...{ style: {} },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-kpi-title" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-kpi-value" },
+});
+(__VLS_ctx.list.length);
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-card sf-kpi-item" },
+    ...{ style: {} },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-kpi-title" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-kpi-value" },
+    ...{ style: {} },
+});
+(__VLS_ctx.errorCount);
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-card sf-kpi-item" },
+    ...{ style: {} },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-kpi-title" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-kpi-value" },
+});
+(__VLS_ctx.avgCost);
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-card sf-kpi-item" },
+    ...{ style: {} },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-kpi-title" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-kpi-value" },
+});
+(__VLS_ctx.total);
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-card sf-table-card" },
+});
 const __VLS_8 = {}.ElTable;
 /** @type {[typeof __VLS_components.ElTable, typeof __VLS_components.elTable, typeof __VLS_components.ElTable, typeof __VLS_components.elTable, ]} */ ;
 // @ts-ignore
@@ -155,7 +223,7 @@ const __VLS_38 = __VLS_37({
     minWidth: "160",
 }, ...__VLS_functionalComponentArgsRest(__VLS_37));
 const __VLS_40 = {}.ElTableColumn;
-/** @type {[typeof __VLS_components.ElTableColumn, typeof __VLS_components.elTableColumn, ]} */ ;
+/** @type {[typeof __VLS_components.ElTableColumn, typeof __VLS_components.elTableColumn, typeof __VLS_components.ElTableColumn, typeof __VLS_components.elTableColumn, ]} */ ;
 // @ts-ignore
 const __VLS_41 = __VLS_asFunctionalComponent(__VLS_40, new __VLS_40({
     prop: "responseCode",
@@ -167,19 +235,41 @@ const __VLS_42 = __VLS_41({
     label: "code",
     width: "90",
 }, ...__VLS_functionalComponentArgsRest(__VLS_41));
+__VLS_43.slots.default;
+{
+    const { default: __VLS_thisSlot } = __VLS_43.slots;
+    const [{ row }] = __VLS_getSlotParams(__VLS_thisSlot);
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
+        ...{ class: "sf-chip" },
+        ...{ style: (row.responseCode && row.responseCode >= 400 ? 'border-color: rgba(255,107,107,0.25)' : '') },
+    });
+    (row.responseCode ?? "-");
+}
+var __VLS_43;
 const __VLS_44 = {}.ElTableColumn;
-/** @type {[typeof __VLS_components.ElTableColumn, typeof __VLS_components.elTableColumn, ]} */ ;
+/** @type {[typeof __VLS_components.ElTableColumn, typeof __VLS_components.elTableColumn, typeof __VLS_components.ElTableColumn, typeof __VLS_components.elTableColumn, ]} */ ;
 // @ts-ignore
 const __VLS_45 = __VLS_asFunctionalComponent(__VLS_44, new __VLS_44({
     prop: "costMs",
     label: "耗时",
-    width: "90",
+    width: "100",
 }));
 const __VLS_46 = __VLS_45({
     prop: "costMs",
     label: "耗时",
-    width: "90",
+    width: "100",
 }, ...__VLS_functionalComponentArgsRest(__VLS_45));
+__VLS_47.slots.default;
+{
+    const { default: __VLS_thisSlot } = __VLS_47.slots;
+    const [{ row }] = __VLS_getSlotParams(__VLS_thisSlot);
+    __VLS_asFunctionalElement(__VLS_intrinsicElements.span, __VLS_intrinsicElements.span)({
+        ...{ class: "sf-chip" },
+        ...{ style: (row.costMs && row.costMs >= 1000 ? 'border-color: rgba(243,178,90,0.25)' : '') },
+    });
+    (row.costMs ?? "-");
+}
+var __VLS_47;
 var __VLS_11;
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
     ...{ style: {} },
@@ -210,7 +300,33 @@ const __VLS_55 = {
     onChange: (__VLS_ctx.load)
 };
 var __VLS_51;
-/** @type {__VLS_StyleScopedClasses['sf-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-head']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-sub']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-actions']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-stagger']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi-item']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi-value']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi-item']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi-value']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi-item']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi-value']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi-item']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-kpi-value']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-table-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-chip']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-chip']} */ ;
 var __VLS_dollars;
 const __VLS_self = (await import('vue')).defineComponent({
     setup() {
@@ -220,6 +336,8 @@ const __VLS_self = (await import('vue')).defineComponent({
             total: total,
             page: page,
             pageSize: pageSize,
+            errorCount: errorCount,
+            avgCost: avgCost,
             load: load,
         };
     },

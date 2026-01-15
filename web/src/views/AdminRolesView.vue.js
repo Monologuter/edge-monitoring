@@ -88,15 +88,21 @@ debugger; /* PartiallyEnd: #3632/scriptSetup.vue */
 const __VLS_ctx = {};
 let __VLS_components;
 let __VLS_directives;
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page-head" },
+});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
-__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ style: {} },
-});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.h2, __VLS_intrinsicElements.h2)({
-    ...{ class: "sf-title" },
+    ...{ class: "sf-page-title" },
 });
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ style: {} },
+    ...{ class: "sf-page-sub" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page-actions" },
 });
 const __VLS_0 = {}.ElInput;
 /** @type {[typeof __VLS_components.ElInput, typeof __VLS_components.elInput, ]} */ ;
@@ -149,6 +155,9 @@ const __VLS_19 = {
 };
 __VLS_15.slots.default;
 var __VLS_15;
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-card sf-table-card" },
+});
 const __VLS_20 = {}.ElTable;
 /** @type {[typeof __VLS_components.ElTable, typeof __VLS_components.elTable, typeof __VLS_components.ElTable, typeof __VLS_components.elTable, ]} */ ;
 // @ts-ignore
@@ -360,6 +369,9 @@ const __VLS_78 = __VLS_77({
     labelWidth: "90px",
 }, ...__VLS_functionalComponentArgsRest(__VLS_77));
 __VLS_79.slots.default;
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-form-grid" },
+});
 const __VLS_80 = {}.ElFormItem;
 /** @type {[typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, typeof __VLS_components.ElFormItem, typeof __VLS_components.elFormItem, ]} */ ;
 // @ts-ignore
@@ -416,10 +428,12 @@ const __VLS_96 = {}.ElFormItem;
 const __VLS_97 = __VLS_asFunctionalComponent(__VLS_96, new __VLS_96({
     label: "权限",
     required: true,
+    ...{ class: "sf-form-full" },
 }));
 const __VLS_98 = __VLS_97({
     label: "权限",
     required: true,
+    ...{ class: "sf-form-full" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_97));
 __VLS_99.slots.default;
 const __VLS_100 = {}.ElSelect;
@@ -463,10 +477,12 @@ const __VLS_108 = {}.ElFormItem;
 const __VLS_109 = __VLS_asFunctionalComponent(__VLS_108, new __VLS_108({
     label: "菜单",
     required: true,
+    ...{ class: "sf-form-full" },
 }));
 const __VLS_110 = __VLS_109({
     label: "菜单",
     required: true,
+    ...{ class: "sf-form-full" },
 }, ...__VLS_functionalComponentArgsRest(__VLS_109));
 __VLS_111.slots.default;
 const __VLS_112 = {}.ElSelect;
@@ -549,7 +565,16 @@ var __VLS_79;
     var __VLS_131;
 }
 var __VLS_75;
-/** @type {__VLS_StyleScopedClasses['sf-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-head']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-sub']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-actions']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-table-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-form-grid']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-form-full']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-form-full']} */ ;
 var __VLS_dollars;
 const __VLS_self = (await import('vue')).defineComponent({
     setup() {

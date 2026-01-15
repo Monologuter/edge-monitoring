@@ -38,14 +38,24 @@ function render() {
         backgroundColor: "transparent",
         grid: { left: 40, right: 18, top: 22, bottom: 30 },
         tooltip: { trigger: "axis" },
-        xAxis: { type: "category", data: buildHours(), axisLabel: { color: "rgba(255,255,255,0.7)" }, axisLine: { lineStyle: { color: "rgba(255,255,255,0.14)" } } },
-        yAxis: { type: "value", axisLabel: { color: "rgba(255,255,255,0.7)" }, splitLine: { lineStyle: { color: "rgba(255,255,255,0.08)" } } },
+        xAxis: { type: "category", data: buildHours(), axisLabel: { color: "rgba(60, 73, 99, 0.6)" }, axisLine: { lineStyle: { color: "rgba(70, 88, 124, 0.12)" } } },
+        yAxis: { type: "value", axisLabel: { color: "rgba(60, 73, 99, 0.6)" }, splitLine: { lineStyle: { color: "rgba(70, 88, 124, 0.08)" } } },
         series: [
             {
                 name: "告警",
-                type: "bar",
+                type: "line",
+                smooth: true,
                 data: overview.value.alarmTrend24h || [],
-                itemStyle: { color: "rgba(42,166,255,0.75)" }
+                lineStyle: { width: 3, color: "rgba(47,107,255,0.9)" },
+                areaStyle: {
+                    color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                        { offset: 0, color: "rgba(47,107,255,0.22)" },
+                        { offset: 1, color: "rgba(47,107,255,0.02)" }
+                    ])
+                },
+                symbol: "circle",
+                symbolSize: 6,
+                itemStyle: { color: "rgba(47,107,255,0.9)" }
             }
         ]
     });

@@ -53,18 +53,34 @@ async function loadTrendData() {
             chart = echarts.init(chartEl.value);
         }
         const option = {
-            title: { text: "24小时趋势", left: "center" },
+            title: { text: "24小时趋势", left: "center", textStyle: { color: "rgba(60, 73, 99, 0.75)", fontWeight: 600 } },
             tooltip: { trigger: "axis" },
+            grid: { left: 42, right: 20, top: 48, bottom: 32 },
             xAxis: {
                 type: "category",
-                data: data.list.map((d) => new Date(d.hourStart).getHours() + ":00")
+                data: data.list.map((d) => new Date(d.hourStart).getHours() + ":00"),
+                axisLabel: { color: "rgba(60, 73, 99, 0.6)" },
+                axisLine: { lineStyle: { color: "rgba(70, 88, 124, 0.12)" } }
             },
-            yAxis: { type: "value" },
+            yAxis: {
+                type: "value",
+                axisLabel: { color: "rgba(60, 73, 99, 0.6)" },
+                splitLine: { lineStyle: { color: "rgba(70, 88, 124, 0.08)" } }
+            },
             series: [{
                     data: data.list.map((d) => d.sampleValue),
                     type: "line",
                     smooth: true,
-                    areaStyle: { opacity: 0.3 }
+                    lineStyle: { width: 3, color: "rgba(47,107,255,0.95)" },
+                    areaStyle: {
+                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                            { offset: 0, color: "rgba(47,107,255,0.22)" },
+                            { offset: 1, color: "rgba(47,107,255,0.02)" }
+                        ])
+                    },
+                    symbol: "circle",
+                    symbolSize: 6,
+                    itemStyle: { color: "rgba(47,107,255,0.9)" }
                 }]
         };
         chart.setOption(option);
@@ -113,15 +129,21 @@ let __VLS_directives;
 /** @type {__VLS_StyleScopedClasses['info-item']} */ ;
 // CSS variable injection 
 // CSS variable injection end 
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page-head" },
+});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({});
-__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ style: {} },
-});
 __VLS_asFunctionalElement(__VLS_intrinsicElements.h2, __VLS_intrinsicElements.h2)({
-    ...{ class: "sf-title" },
+    ...{ class: "sf-page-title" },
 });
 __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-    ...{ style: {} },
+    ...{ class: "sf-page-sub" },
+});
+__VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
+    ...{ class: "sf-page-actions" },
 });
 const __VLS_0 = {}.ElSelect;
 /** @type {[typeof __VLS_components.ElSelect, typeof __VLS_components.elSelect, typeof __VLS_components.ElSelect, typeof __VLS_components.elSelect, ]} */ ;
@@ -189,7 +211,7 @@ if (!__VLS_ctx.selectedDeviceCode) {
     for (const [d] of __VLS_getVForSourceType((__VLS_ctx.devices))) {
         __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
             key: (d.deviceCode),
-            ...{ class: "device-card" },
+            ...{ class: "device-card sf-card" },
             ...{ class: ({ offline: d.onlineStatus !== 1 }) },
         });
         __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
@@ -274,7 +296,7 @@ else {
     __VLS_23.slots.default;
     var __VLS_23;
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
-        ...{ class: "detail-card" },
+        ...{ class: "detail-card sf-card" },
     });
     __VLS_asFunctionalElement(__VLS_intrinsicElements.div, __VLS_intrinsicElements.div)({
         ...{ class: "detail-header" },
@@ -332,9 +354,14 @@ else {
     });
     /** @type {typeof __VLS_ctx.chartEl} */ ;
 }
-/** @type {__VLS_StyleScopedClasses['sf-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-head']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-title']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-sub']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-page-actions']} */ ;
 /** @type {__VLS_StyleScopedClasses['device-grid']} */ ;
 /** @type {__VLS_StyleScopedClasses['device-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-card']} */ ;
 /** @type {__VLS_StyleScopedClasses['device-card-header']} */ ;
 /** @type {__VLS_StyleScopedClasses['device-name']} */ ;
 /** @type {__VLS_StyleScopedClasses['device-status']} */ ;
@@ -351,6 +378,7 @@ else {
 /** @type {__VLS_StyleScopedClasses['threshold']} */ ;
 /** @type {__VLS_StyleScopedClasses['device-detail']} */ ;
 /** @type {__VLS_StyleScopedClasses['detail-card']} */ ;
+/** @type {__VLS_StyleScopedClasses['sf-card']} */ ;
 /** @type {__VLS_StyleScopedClasses['detail-header']} */ ;
 /** @type {__VLS_StyleScopedClasses['status-badge']} */ ;
 /** @type {__VLS_StyleScopedClasses['detail-info']} */ ;
